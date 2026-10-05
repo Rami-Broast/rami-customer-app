@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Rami Broast",
+    "slug": "rami-customer",
+    "scheme": "rami",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "icon": "./assets/logo.jpeg",
+    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "image": "./assets/logo.jpeg",
+      "resizeMode": "contain",
+      "backgroundColor": "#752E2A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ramibroast.customer"
+    },
+    "android": {
+      "package": "com.ramibroast.customer",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.jpeg",
+        "backgroundColor": "#752E2A"
+      },
+      "config": {
+        "googleMaps": {
+          "//": "Supply your Google Maps Android API key here (or via EAS secret). Never commit a real key.",
+          "apiKey": ""
+        }
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Allow Rami Broast to use your location to set your delivery address." }
+      ]
+    ],
+    "extra": {
+      "//": "API base URL is injected per environment; never hard-code secrets.",
+      "apiBaseUrl": "https://rami-api.example.com/api/v1",
+      "googleMapsApiKey": ""
+    }
+  }
+}
