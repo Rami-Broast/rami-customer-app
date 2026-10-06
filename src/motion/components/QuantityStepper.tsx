@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { MinusIcon, PlusIcon } from '../../components/icons';
 import { useTheme } from '../../theme/theme';
 import { useMotion } from '../MotionProvider';
 import { PressableScale } from './PressableScale';
@@ -47,7 +48,7 @@ export function QuantityStepper({
 
   const numberStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
 
-  const button = (label: string, next: number, disabled: boolean, hint: string) => (
+  const button = (icon: React.ReactNode, next: number, disabled: boolean, hint: string) => (
     <PressableScale
       accessibilityRole="button"
       accessibilityLabel={hint}
@@ -59,18 +60,20 @@ export function QuantityStepper({
         height: 36,
         borderRadius: theme.radius.md,
         backgroundColor: theme.colors.surfaceAlt,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
         alignItems: 'center',
         justifyContent: 'center',
         opacity: disabled ? 0.4 : 1,
       }}
     >
-      <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: '600' }}>{label}</Text>
+      {icon}
     </PressableScale>
   );
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      {button('−', Math.max(min, value - 1), value <= min, 'Decrease quantity')}
+      {button(<MinusIcon size={18} color={theme.colors.text} />, Math.max(min, value - 1), value <= min, 'Decrease quantity')}
       <Animated.Text
         style={[
           {
@@ -85,7 +88,7 @@ export function QuantityStepper({
       >
         {value}
       </Animated.Text>
-      {button('+', Math.min(max, value + 1), value >= max, 'Increase quantity')}
+      {button(<PlusIcon size={18} color={theme.colors.text} />, Math.min(max, value + 1), value >= max, 'Increase quantity')}
     </View>
   );
 }
