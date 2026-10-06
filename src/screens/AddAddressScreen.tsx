@@ -6,9 +6,10 @@ import type { Region } from 'react-native-maps';
 
 import { ApiError } from '../api/http';
 import { useAuth } from '../auth/AuthProvider';
-import { PrimaryButton, Screen, TextField } from '../components/ui';
+import { Card, LinkButton, PrimaryButton, Screen, TextField } from '../components/ui';
+import { PinIcon } from '../components/icons';
 import { AppMap, DEFAULT_REGION } from '../maps/AppMap';
-import { PressableScale, Toast } from '../motion';
+import { Toast } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { useTheme } from '../theme/theme';
 
@@ -66,17 +67,25 @@ export function AddAddressScreen({ navigation }: NativeStackScreenProps<RootStac
     <Screen title="Add address" onBack={() => navigation.goBack()}>
       <Toast visible={!!error} message={error ?? ''} tone="danger" onHide={() => setError(null)} />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <View style={{ height: 220, borderRadius: theme.radius.lg, overflow: 'hidden', marginBottom: 8 }}>
-          <AppMap
-            region={region}
-            onRegionChangeComplete={setRegion}
-            onPress={(coord) => setPin(coord)}
-            markers={pin ? [{ id: 'pin', ...pin, kind: 'customer', title: 'Delivery here' }] : []}
-          />
-        </View>
-        <PressableScale accessibilityRole="button" onPress={useMyLocation} style={{ alignSelf: 'flex-start', marginBottom: 16 }}>
-          <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>📍 Use my current location</Text>
-        </PressableScale>
+        <Card padded={false} style={{ overflow: 'hidden', marginBottom: 10 }}>
+          <View style={{ height: 220 }}>
+            <AppMap
+              region={region}
+              onRegionChangeComplete={setRegion}
+              onPress={(coord) => setPin(coord)}
+              markers={pin ? [{ id: 'pin', ...pin, kind: 'customer', title: 'Delivery here' }] : []}
+            />
+          </View>
+        </Card>
+        <Text style={{ color: theme.colors.textMuted, ...theme.type.caption, marginBottom: 8 }}>
+          Tap the map to drop a pin where the driver should deliver.
+        </Text>
+        <LinkButton
+          label="Use my current location"
+          leftIcon={<PinIcon size={16} color={theme.colors.accent} />}
+          onPress={useMyLocation}
+          style={{ marginBottom: 16 }}
+        />
 
         <TextField label="Label" value={label} onChangeText={setLabel} maxLength={60} />
         <TextField label="Address line" value={line1} onChangeText={setLine1} placeholder="Street, building, apartment" />

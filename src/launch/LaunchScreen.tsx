@@ -34,9 +34,12 @@ export interface LaunchScreenProps {
  * and the whole screen fades out to reveal the app — a single, short sequence,
  * never a loop.
  *
- * It sits on a fixed light background (the logo artwork is on white), so it
- * reads cleanly in both light and dark mode — launch screens are brand-fixed by
- * convention rather than following the OS theme.
+ * It sits on the fixed brand maroon (the same field the logo artwork is on, so
+ * the JPEG's background merges into the screen and only the gold mark floats),
+ * matching the native splash's `backgroundColor`. Launch screens are brand-fixed
+ * by convention rather than following the OS theme, so this reads identically in
+ * light and dark mode; the hand-off underline is gold, the one colour that shows
+ * on maroon.
  *
  * Under reduced motion the logo simply appears (no fade, no scale), is held for
  * the same brief moment, and the screen is dismissed instantly. The hold is
@@ -109,7 +112,7 @@ export function LaunchScreen({ onFinish }: LaunchScreenProps): React.JSX.Element
             width: logoWidth * 0.36,
             height: 3,
             borderRadius: 2,
-            backgroundColor: theme.colors.primary,
+            backgroundColor: theme.colors.gold,
           }}
         />
       </Animated.View>

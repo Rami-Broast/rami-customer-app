@@ -1,11 +1,12 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '../api/http';
 import { useAuth } from '../auth/AuthProvider';
-import { PrimaryButton, Screen, TextField } from '../components/ui';
-import { Toast } from '../motion';
+import { BrandMark, PrimaryButton, Screen, TextField } from '../components/ui';
+import { ChevronRightIcon } from '../components/icons';
+import { FadeIn, Toast } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { useTheme } from '../theme/theme';
 
@@ -33,23 +34,38 @@ export function PhoneScreen({ navigation }: NativeStackScreenProps<RootStackPara
   };
 
   return (
-    <Screen title="Sign in">
+    <Screen>
       <Toast visible={!!error} message={error ?? ''} tone="danger" onHide={() => setError(null)} />
-      <View style={{ padding: 20 }}>
-        <Text style={{ color: theme.colors.textMuted, fontSize: 15, lineHeight: 22, marginBottom: 24 }}>
-          Enter your mobile number and we’ll text you a login code.
-        </Text>
-        <TextField
-          label="Mobile number"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-          maxLength={13}
-          autoFocus
-          placeholder="+9665XXXXXXXX"
-        />
-        <PrimaryButton label="Send code" onPress={submit} busy={busy} disabled={!valid} />
-      </View>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: 'center' }} keyboardShouldPersistTaps="handled">
+        <FadeIn translateY={14}>
+          <View style={{ alignItems: 'center', marginBottom: 28 }}>
+            <BrandMark size={104} />
+            <Text style={{ color: theme.colors.text, ...theme.type.display, marginTop: 20, textAlign: 'center' }}>
+              Rami Broast
+            </Text>
+            <Text style={{ color: theme.colors.textMuted, ...theme.type.body, marginTop: 6, textAlign: 'center' }}>
+              Sign in to order your favourites for pickup or delivery.
+            </Text>
+          </View>
+
+          <TextField
+            label="Mobile number"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            maxLength={13}
+            autoFocus
+            placeholder="+9665XXXXXXXX"
+          />
+          <PrimaryButton label="Send code" onPress={submit} busy={busy} disabled={!valid} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, gap: 4 }}>
+            <Text style={{ color: theme.colors.textMuted, ...theme.type.caption }}>
+              We’ll text you a one-time login code
+            </Text>
+            <ChevronRightIcon size={14} color={theme.colors.textMuted} />
+          </View>
+        </FadeIn>
+      </ScrollView>
     </Screen>
   );
 }
