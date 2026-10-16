@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { Card, SecondaryButton, Screen } from '../components/ui';
 import { BikeIcon } from '../components/icons';
 import { OrderStatusTracker } from '../features/order/OrderStatusTracker';
+import { ReadyCountdown } from '../features/order/ReadyCountdown';
 import { useAsync } from '../hooks/useAsync';
 import { AppMap, DEFAULT_REGION, MapMarker } from '../maps/AppMap';
 import { ErrorState, Skeleton } from '../motion';
@@ -68,6 +69,7 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
         <ErrorState title="Couldn’t load your order" message={error.message} actionLabel="Retry" onAction={reload} />
       ) : order ? (
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8, gap: 12 }}>
+          <ReadyCountdown order={order} />
           <OrderStatusTracker status={order.status} type={order.type} />
 
           {(() => {

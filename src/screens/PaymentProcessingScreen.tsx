@@ -6,7 +6,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { Card, PrimaryButton, Screen, SecondaryButton } from '../components/ui';
 import { PaymentStateView } from '../features/payment/PaymentStateView';
 import { paymentVisualForServerStatus } from '../features/payment/payment-state.model';
-import { PAYMENT_METHOD, PAYMENT_STATUS, PaymentStatus } from '../types/backend';
+import { PAYMENT_STATUS, PaymentStatus } from '../types/backend';
 import { RootStackParamList } from '../navigation/types';
 import { useTheme } from '../theme/theme';
 
@@ -23,7 +23,7 @@ export function PaymentProcessingScreen({
 }: NativeStackScreenProps<RootStackParamList, 'PaymentProcessing'>): React.JSX.Element {
   const theme = useTheme();
   const { api } = useAuth();
-  const { orderId } = route.params;
+  const { orderId, method } = route.params;
   const [status, setStatus] = useState<PaymentStatus>(PAYMENT_STATUS.PENDING);
   const started = useRef(false);
 
@@ -57,7 +57,7 @@ export function PaymentProcessingScreen({
       if (!started.current) {
         started.current = true;
         try {
-          await api.initiatePayment(orderId, PAYMENT_METHOD.CARD);
+          await api.initiatePayment(orderId, method);
         } catch {
           // Even if initiate errored, poll — the server remains the truth.
         }
@@ -73,7 +73,7 @@ export function PaymentProcessingScreen({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]);
+  }, [orderId, method]);
 
   const visual = paymentVisualForServerStatus(status).visual;
 

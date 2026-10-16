@@ -1,4 +1,4 @@
-import { OrderType } from '../types/backend';
+import { OrderType, PaymentMethod } from '../types/backend';
 
 /** The app's screens and their params. One source of truth for navigation typing. */
 export type RootStackParamList = {
@@ -11,7 +11,7 @@ export type RootStackParamList = {
   Cart: undefined;
   Checkout: { type: OrderType };
   AddAddress: undefined;
-  PaymentProcessing: { orderId: string };
+  PaymentProcessing: { orderId: string; method: PaymentMethod };
   OrderTracking: { orderId: string };
   Orders: undefined;
 };

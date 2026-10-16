@@ -101,6 +101,14 @@ export interface Order {
   totalMinor: number;
   items: OrderItem[];
   placedAt: string;
+  // Lifecycle timestamps, stamped by the backend as the order moves. Null until
+  // the order reaches that stage. Used to time an honest "ready in ~X min".
+  confirmedAt?: string | null;
+  preparingAt?: string | null;
+  readyAt?: string | null;
+  // The branch's configured prep time, surfaced on the order's branch. Null (or
+  // absent, on an older backend) means no estimate may be shown.
+  branch?: { settings?: { prepTimeMinutes: number | null } | null } | null;
 }
 
 export interface Payment {
