@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '../api/http';
+import { ONLINE_PAYMENTS_ENABLED } from '../api/config';
+import { availablePaymentMethods, defaultPaymentMethod } from '../features/payment/payment-availability';
 import { Address } from '../api/types';
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
@@ -34,7 +36,11 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
   const branchId = cart.branchId ?? '';
   const [type, setType] = useState<OrderType>(route.params.type);
   const [addressId, setAddressId] = useState<string | null>(null);
-  const [method, setMethod] = useState<PaymentMethod>(PAYMENT_METHOD.CARD);
+  // Online card payment is off for the closed pilot (cash on delivery / pickup
+  // only); the list and default come from one build-time flag, never hard-coded.
+  const paymentMethods = availablePaymentMethods(ONLINE_PAYMENTS_ENABLED);
+  const canChoosePayment = paymentMethods.length > 1;
+  const [method, setMethod] = useState<PaymentMethod>(defaultPaymentMethod(ONLINE_PAYMENTS_ENABLED));
   const [sheetOpen, setSheetOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
@@ -226,15 +232,18 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
           <Text style={{ color: theme.colors.textMuted, ...theme.type.label, marginBottom: 10 }}>PAYMENT METHOD</Text>
           <PressableScale
             accessibilityRole="button"
-            accessibilityLabel={`Payment method: ${METHOD_LABELS[method]}. Change`}
-            onPress={() => setSheetOpen(true)}
+            accessibilityLabel={
+              canChoosePayment ? `Payment method: ${METHOD_LABELS[method]}. Change` : `Payment method: ${METHOD_LABELS[method]}`
+            }
+            disabled={!canChoosePayment}
+            onPress={canChoosePayment ? () => setSheetOpen(true) : undefined}
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               {methodIcon(method, theme.colors.primary)}
               <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '800' }}>{METHOD_LABELS[method]}</Text>
             </View>
-            <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>Change</Text>
+            {canChoosePayment ? <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>Change</Text> : null}
           </PressableScale>
         </Card>
 
@@ -254,7 +263,7 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
 
       <BottomSheet visible={sheetOpen} onClose={() => setSheetOpen(false)}>
         <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 12 }}>Payment method</Text>
-        {[PAYMENT_METHOD.CARD, PAYMENT_METHOD.MADA, PAYMENT_METHOD.APPLE_PAY, PAYMENT_METHOD.CASH_ON_DELIVERY].map((m) => {
+        {paymentMethods.map((m) => {
           const selected = method === m;
           return (
             <PressableScale

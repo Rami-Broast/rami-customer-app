@@ -1,5 +1,7 @@
 import Constants from 'expo-constants';
 
+import { resolveOnlinePaymentsEnabled } from '../features/payment/payment-availability';
+
 /**
  * Resolves the API base URL. Pure so it can be tested; the runtime value comes
  * from `app.json → expo.extra.apiBaseUrl` per environment. No secret is ever
@@ -17,3 +19,10 @@ export function resolveBaseUrl(extra: unknown): string {
 }
 
 export const API_BASE_URL = resolveBaseUrl(Constants.expoConfig?.extra);
+
+/**
+ * Whether online card payment is offered at checkout. OFF for the closed pilot
+ * (cash on delivery / pickup only); turned on by `ONLINE_PAYMENTS_ENABLED=true`
+ * once a real gateway exists. See `features/payment/payment-availability.ts`.
+ */
+export const ONLINE_PAYMENTS_ENABLED = resolveOnlinePaymentsEnabled(Constants.expoConfig?.extra);

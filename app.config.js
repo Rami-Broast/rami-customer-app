@@ -16,6 +16,12 @@ module.exports = ({ config }) => {
   const mapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? config.extra?.googleMapsApiKey ?? '';
   const apiBaseUrl = process.env.API_BASE_URL ?? config.extra?.apiBaseUrl ?? '';
 
+  // Online card payment is OFF unless explicitly enabled. The closed pilot takes
+  // cash on delivery / pickup only; this flips on the day a real gateway (Tap)
+  // is live. Only the exact string "true" enables it, so an unset or typo'd
+  // value cannot switch real payments on.
+  const onlinePaymentsEnabled = process.env.ONLINE_PAYMENTS_ENABLED === 'true';
+
   return {
     ...config,
     android: {
@@ -29,6 +35,7 @@ module.exports = ({ config }) => {
       ...config.extra,
       apiBaseUrl,
       googleMapsApiKey: mapsApiKey,
+      onlinePaymentsEnabled,
     },
   };
 };
