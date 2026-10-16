@@ -83,7 +83,7 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
       if (method === PAYMENT_METHOD.CASH_ON_DELIVERY) {
         navigation.replace('OrderTracking', { orderId: order.id });
       } else {
-        navigation.replace('PaymentProcessing', { orderId: order.id });
+        navigation.replace('PaymentProcessing', { orderId: order.id, method });
       }
     } catch (e) {
       setPlaceError(e instanceof ApiError ? e.message : 'Could not place the order. Try again.');
