@@ -8,6 +8,7 @@ import { BikeIcon } from '../components/icons';
 import { OrderStatusTracker } from '../features/order/OrderStatusTracker';
 import { useAsync } from '../hooks/useAsync';
 import { AppMap, DEFAULT_REGION, MapMarker } from '../maps/AppMap';
+import { useSmoothedCoordinate } from '../maps/useSmoothedCoordinate';
 import { ErrorState, Skeleton } from '../motion';
 import { ORDER_STATUS, ORDER_TYPE, OrderStatus } from '../types/backend';
 import type { DeliveryTracking } from '../api/types';
@@ -41,6 +42,15 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
     () => (order?.type === ORDER_TYPE.DELIVERY ? api.trackDelivery(orderId) : Promise.resolve(null)),
     [order?.type, tick],
   );
+
+  // The driver's reported position, eased between polls so the pin glides
+  // rather than jumping every 8 seconds. Hook is called unconditionally.
+  const td = tracking.data;
+  const driverTarget =
+    td?.driver?.currentLatitude != null && td?.driver?.currentLongitude != null
+      ? { latitude: td.driver.currentLatitude, longitude: td.driver.currentLongitude }
+      : null;
+  const smoothedDriver = useSmoothedCoordinate(driverTarget);
 
   // Poll while the order is still moving. `tick` drives useAsync's reload via deps.
   useEffect(() => {
@@ -80,8 +90,11 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
               return null;
             }
             const markers: MapMarker[] = [];
-            if (driverLat !== null && driverLng !== null) {
-              markers.push({ id: 'driver', latitude: driverLat, longitude: driverLng, kind: 'driver', title: d?.driver?.user.fullName ?? 'Driver' });
+            // Use the smoothed position for the marker; fall back to the raw
+            // fix if the easing hook has not produced one yet.
+            const driverPos = smoothedDriver ?? (driverLat !== null && driverLng !== null ? { latitude: driverLat, longitude: driverLng } : null);
+            if (driverPos) {
+              markers.push({ id: 'driver', latitude: driverPos.latitude, longitude: driverPos.longitude, kind: 'driver', title: d?.driver?.user.fullName ?? 'Driver' });
             }
             if (addrLat !== null && addrLng !== null) {
               markers.push({ id: 'dest', latitude: addrLat, longitude: addrLng, kind: 'customer', title: 'Delivery address' });

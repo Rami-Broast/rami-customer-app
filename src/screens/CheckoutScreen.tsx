@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 
 import { ApiError } from '../api/http';
 import { Address } from '../api/types';
@@ -40,9 +40,13 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
   const [placeError, setPlaceError] = useState<string | null>(null);
 
   const { data: quote, loading, error, reload } = useAsync(
-    () => api.quote({ branchId, type, items }),
-    [branchId, JSON.stringify(items), type],
+    () => api.quote({ branchId, type, items, couponCode: cart.couponCode }),
+    [branchId, JSON.stringify(items), type, cart.couponCode],
   );
+
+  // The coupon field mirrors the cart's applied code; "Apply" commits it so the
+  // quote above re-prices through the server, the only authority on validity.
+  const [couponInput, setCouponInput] = useState(cart.couponCode ?? '');
 
   // Addresses, reloaded whenever the screen regains focus (e.g. after adding one).
   const addresses = useAsync<Address[]>(() => api.listAddresses(), []);
@@ -71,6 +75,7 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
         type,
         paymentMethod: method,
         items,
+        couponCode: cart.couponCode,
         customerAddressId: isDelivery ? addressId ?? undefined : undefined,
       });
       dispatch({ type: 'CLEAR' });
@@ -199,6 +204,53 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
             />
           </Card>
         ) : null}
+
+        <Card>
+          <Text style={{ color: theme.colors.textMuted, ...theme.type.label, marginBottom: 10 }}>PROMO CODE</Text>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <TextInput
+              value={couponInput}
+              onChangeText={setCouponInput}
+              placeholder="Enter a code"
+              placeholderTextColor={theme.colors.textMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              accessibilityLabel="Promo code"
+              style={{
+                flex: 1,
+                backgroundColor: theme.colors.surfaceAlt,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                fontSize: 16,
+                color: theme.colors.text,
+              }}
+            />
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Apply promo code"
+              onPress={() => dispatch({ type: 'SET_COUPON', code: couponInput })}
+              style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radius.md, paddingVertical: 12, paddingHorizontal: 18 }}
+            >
+              <Text style={{ color: theme.colors.onPrimary, fontWeight: '800' }}>Apply</Text>
+            </PressableScale>
+          </View>
+          {cart.couponCode ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+              <Text style={{ color: theme.colors.success, fontWeight: '700' }}>Applied: {cart.couponCode}</Text>
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel="Remove promo code"
+                onPress={() => {
+                  dispatch({ type: 'SET_COUPON', code: '' });
+                  setCouponInput('');
+                }}
+              >
+                <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>Remove</Text>
+              </PressableScale>
+            </View>
+          ) : null}
+        </Card>
 
         <Card>
           <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 16, marginBottom: 14 }}>Order total</Text>

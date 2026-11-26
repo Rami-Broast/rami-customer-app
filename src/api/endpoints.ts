@@ -1,6 +1,6 @@
 import { OrderType, PaymentMethod } from '../types/backend';
 import { ApiClient } from './http';
-import { Address, AuthTokens, Branch, DeliveryTracking, Menu, Order, Payment, PriceQuote } from './types';
+import { Address, AuthTokens, Branch, CustomerConfig, DeliveryTracking, Menu, Order, Payment, PriceQuote } from './types';
 
 export interface AddressInput {
   label?: string;
@@ -53,7 +53,17 @@ export class Api {
     return this.http.request(`/branches/${branchId}/menu`, { public: true });
   }
 
-  quote(input: { branchId: string; type: OrderType; items: OrderItemInput[] }): Promise<PriceQuote> {
+  /** Public app config: branding, feature flags, and the published offers. */
+  config(): Promise<CustomerConfig> {
+    return this.http.request('/customer/config', { public: true });
+  }
+
+  quote(input: {
+    branchId: string;
+    type: OrderType;
+    items: OrderItemInput[];
+    couponCode?: string;
+  }): Promise<PriceQuote> {
     // Authenticated: `POST /pricing/quote` has no `@Public()`. `public: true`
     // stripped the bearer token and every quote 401'd, even signed in.
     return this.http.request('/pricing/quote', { method: 'POST', body: input });

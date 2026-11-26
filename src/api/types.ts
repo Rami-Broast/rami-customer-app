@@ -48,6 +48,10 @@ export interface MenuProduct {
   imageUrl: string | null;
   priceMinor: number;
   taxClass: string;
+  /** Per-branch sell/don't-sell gate. A client that ignores it builds a cart that fails at checkout. */
+  isAvailable: boolean;
+  /** When a timed stock-out ends (ISO), or null (on sale, or off with no time promised). */
+  unavailableUntil?: string | null;
   variants: { id: string; name: string; priceMinor: number; isDefault: boolean }[];
   modifierGroups: MenuModifierGroup[];
 }
@@ -78,13 +82,22 @@ export interface PriceQuote {
   vatRate: string;
 }
 
+export interface OrderItemModifier {
+  /** Null when the add-on was deleted from the catalogue since the order. */
+  addonId: string | null;
+  addonName: string;
+}
+
 export interface OrderItem {
   id: string;
+  /** Null when the product was deleted since the order — then it can't be reordered. */
+  productId: string | null;
   productName: string;
   variantName: string | null;
   quantity: number;
   unitPriceMinor: number;
   lineTotalMinor: number;
+  modifiers?: OrderItemModifier[];
 }
 
 export interface Order {
@@ -149,4 +162,32 @@ export interface DeliveryTracking {
     lastLocationAt: string | null;
     user: { fullName: string };
   } | null;
+}
+
+/** A published coupon surfaced as a tappable offer in the customer app. */
+export type OfferDiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT';
+
+export interface Offer {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  discountType: OfferDiscountType;
+  /** For PERCENTAGE, a whole-percent number (20 = 20%); for FIXED_AMOUNT, minor units. */
+  discountValue: number;
+  maxDiscountMinor?: number;
+  minSpendMinor?: number;
+  validUntil: string;
+}
+
+/**
+ * The public `/customer/config` payload. Only the fields the app consumes are
+ * typed; the backend sends more (banners, promotions), which are ignored here
+ * until a screen reads them.
+ */
+export interface CustomerConfig {
+  version: number;
+  features: Record<string, boolean>;
+  offers: Offer[];
 }
