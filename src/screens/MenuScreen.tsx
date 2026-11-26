@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { API_BASE_URL } from '../api/config';
@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { useBranch } from '../branch/BranchProvider';
 import { BranchList, BranchPickerSheet } from '../branch/BranchPicker';
 import { useCart } from '../cart/CartProvider';
+import { AddToCartButton, useFlyToCart } from '../cart/FlyToCart';
 import { Card, PriceTag, Screen, SectionTitle } from '../components/ui';
 import { CartIcon, LogoutIcon, PinIcon, PlusIcon, ReceiptIcon } from '../components/icons';
 import { filterMenuCategories } from '../features/menu/menu-filter';
@@ -25,6 +26,11 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
   const { api, signOut } = useAuth();
   const { cart, count, dispatch } = useCart();
   const branch = useBranch();
+  const { registerCartTarget } = useFlyToCart();
+  const cartTargetRef = useRef<View>(null);
+  useEffect(() => {
+    registerCartTarget(cartTargetRef.current);
+  }, [registerCartTarget]);
 
   // An explicit branch param (rare, e.g. a deep link) overrides the resolved one.
   const activeBranchId = route.params?.branchId ?? branch.selected?.id ?? null;
@@ -100,26 +106,28 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
   );
 
   const cartButton = (
-    <PressableScale
-      accessibilityRole="button"
-      accessibilityLabel={`View cart, ${count} item${count === 1 ? '' : 's'}`}
-      onPress={() => navigation.navigate('Cart')}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: theme.colors.surface,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <CartIcon size={21} color={theme.colors.text} />
-      <View style={{ position: 'absolute', top: -5, right: -6 }}>
-        <CartBadge count={count} />
-      </View>
-    </PressableScale>
+    <View ref={cartTargetRef} collapsable={false}>
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={`View cart, ${count} item${count === 1 ? '' : 's'}`}
+        onPress={() => navigation.navigate('Cart')}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CartIcon size={21} color={theme.colors.text} />
+        <View style={{ position: 'absolute', top: -5, right: -6 }}>
+          <CartBadge count={count} />
+        </View>
+      </PressableScale>
+    </View>
   );
 
   const headerRight = (
@@ -298,17 +306,17 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
                                     <Text style={{ color: theme.colors.textMuted, fontSize: 20 }}>×</Text>
                                   </View>
                                 ) : (
-                                  <PressableScale
-                                    accessibilityRole="button"
+                                  <AddToCartButton
                                     accessibilityLabel={`Add ${product.name}`}
-                                    onPress={() => add(product)}
+                                    onAdd={() => add(product)}
+                                    imageUri={photo}
                                     style={[
                                       { backgroundColor: theme.colors.primary, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
                                       theme.elevation(1),
                                     ]}
                                   >
                                     <PlusIcon size={22} color={theme.colors.onPrimary} />
-                                  </PressableScale>
+                                  </AddToCartButton>
                                 )}
                               </View>
                             </Card>
