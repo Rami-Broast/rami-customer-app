@@ -1,7 +1,8 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, TextInput, View } from 'react-native';
+import { Image, ScrollView, Text, TextInput, View } from 'react-native';
 
+import { API_BASE_URL } from '../api/config';
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
 import { Card, PriceTag, Screen, SectionTitle } from '../components/ui';
@@ -12,6 +13,7 @@ import { useAsync } from '../hooks/useAsync';
 import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton, Stagger, Toast } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
+import { resolveImageUrl } from '../util/imageUrl';
 import { useTheme } from '../theme/theme';
 import type { MenuProduct } from '../api/types';
 
@@ -183,9 +185,24 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
                     <Stagger>
                       {category.products.map((product) => {
                         const soldOut = !product.isAvailable;
+                        const photo = resolveImageUrl(product.imageUrl, API_BASE_URL);
                         return (
                           <Card key={product.id}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', opacity: soldOut ? 0.55 : 1 }}>
+                              {photo ? (
+                                <Image
+                                  source={{ uri: photo }}
+                                  resizeMode="cover"
+                                  accessibilityIgnoresInvertColors
+                                  style={{
+                                    width: 56,
+                                    height: 56,
+                                    borderRadius: theme.radius.md,
+                                    marginRight: 12,
+                                    backgroundColor: theme.colors.surfaceAlt,
+                                  }}
+                                />
+                              ) : null}
                               <View style={{ flex: 1, paddingRight: 12 }}>
                                 <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '800' }}>{product.name}</Text>
                                 {product.description ? (

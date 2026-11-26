@@ -1,10 +1,12 @@
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 
+import { API_BASE_URL } from '../../api/config';
 import type { Offer } from '../../api/types';
 import { FadeIn, PressableScale } from '../../motion';
 import { STAGGER_STEP } from '../../motion/tokens';
 import { useTheme } from '../../theme/theme';
+import { resolveImageUrl } from '../../util/imageUrl';
 import { formatMinSpend, formatOfferDiscount } from './offer-format';
 
 export interface OffersCarouselProps {
@@ -56,6 +58,7 @@ export function OffersCarousel({ offers, appliedCode, onApply }: OffersCarouselP
         {offers.map((offer, i) => {
           const applied = appliedCode === offer.code;
           const condition = formatMinSpend(offer);
+          const art = resolveImageUrl(offer.imageUrl, API_BASE_URL);
           return (
             <FadeIn key={offer.id} delay={Math.min(i, 6) * STAGGER_STEP} translateY={6}>
               <PressableScale
@@ -72,6 +75,20 @@ export function OffersCarousel({ offers, appliedCode, onApply }: OffersCarouselP
                   padding: 14,
                 }}
               >
+                {art ? (
+                  <Image
+                    source={{ uri: art }}
+                    resizeMode="cover"
+                    accessibilityIgnoresInvertColors
+                    style={{
+                      width: '100%',
+                      height: 90,
+                      borderRadius: theme.radius.md,
+                      marginBottom: 10,
+                      backgroundColor: theme.colors.surfaceAlt,
+                    }}
+                  />
+                ) : null}
                 <Text style={{ color: theme.colors.primary, fontSize: 18, fontWeight: '800' }}>
                   {formatOfferDiscount(offer)}
                 </Text>
