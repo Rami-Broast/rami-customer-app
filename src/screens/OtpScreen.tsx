@@ -1,11 +1,12 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '../api/http';
 import { useAuth } from '../auth/AuthProvider';
 import { PrimaryButton, Screen, TextField } from '../components/ui';
-import { Toast } from '../motion';
+import { PhoneIcon } from '../components/icons';
+import { FadeIn, Toast } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { useTheme } from '../theme/theme';
 
@@ -36,13 +37,30 @@ export function OtpScreen({ route, navigation }: NativeStackScreenProps<RootStac
   return (
     <Screen title="Enter code" onBack={() => navigation.goBack()}>
       <Toast visible={!!error} message={error ?? ''} tone="danger" onHide={() => setError(null)} />
-      <View style={{ padding: 20 }}>
-        <Text style={{ color: theme.colors.textMuted, fontSize: 15, lineHeight: 22, marginBottom: 24 }}>
-          We sent a code to {phone}.
-        </Text>
-        <TextField label="Login code" value={code} onChangeText={setCode} keyboardType="number-pad" maxLength={8} autoFocus />
-        <PrimaryButton label="Verify" onPress={submit} busy={busy} disabled={!valid} />
-      </View>
+      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
+        <FadeIn translateY={14}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: theme.colors.primarySoft,
+              borderRadius: theme.radius.lg,
+              padding: 14,
+              marginBottom: 24,
+            }}
+          >
+            <PhoneIcon size={22} color={theme.colors.primary} />
+            <Text style={{ color: theme.colors.text, ...theme.type.body, flex: 1 }}>
+              We sent a code to{' '}
+              <Text style={{ fontWeight: '800' }}>{phone}</Text>.
+            </Text>
+          </View>
+
+          <TextField label="Login code" value={code} onChangeText={setCode} keyboardType="number-pad" maxLength={8} autoFocus />
+          <PrimaryButton label="Verify" onPress={submit} busy={busy} disabled={!valid} />
+        </FadeIn>
+      </ScrollView>
     </Screen>
   );
 }

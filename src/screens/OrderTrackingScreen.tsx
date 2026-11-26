@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { useAuth } from '../auth/AuthProvider';
-import { Card, PrimaryButton, Screen } from '../components/ui';
+import { Card, SecondaryButton, Screen } from '../components/ui';
+import { BikeIcon } from '../components/icons';
 import { OrderStatusTracker } from '../features/order/OrderStatusTracker';
 import { useAsync } from '../hooks/useAsync';
 import { AppMap, DEFAULT_REGION, MapMarker } from '../maps/AppMap';
@@ -54,7 +55,11 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
   }, [order, tick, reload]);
 
   return (
-    <Screen title="Your order" onBack={() => navigation.canGoBack() ? navigation.goBack() : navigation.replace('Branches')}>
+    <Screen
+      title="Your order"
+      subtitle={order ? `Order ${order.orderNumber}` : undefined}
+      onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.replace('Branches'))}
+    >
       {loading && !order ? (
         <View style={{ padding: 20, gap: 12 }}>
           <Skeleton height={220} radius={theme.radius.lg} />
@@ -62,8 +67,7 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
       ) : error && !order ? (
         <ErrorState title="Couldn’t load your order" message={error.message} actionLabel="Retry" onAction={reload} />
       ) : order ? (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-          <Text style={{ color: theme.colors.textMuted }}>Order {order.orderNumber}</Text>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8, gap: 12 }}>
           <OrderStatusTracker status={order.status} type={order.type} />
 
           {(() => {
@@ -83,34 +87,59 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
               markers.push({ id: 'dest', latitude: addrLat, longitude: addrLng, kind: 'customer', title: 'Delivery address' });
             }
             const focus = markers[0];
+            const driverName = d?.driver?.user.fullName ?? null;
             return (
-              <View style={{ height: 220, borderRadius: theme.radius.lg, overflow: 'hidden' }}>
-                <AppMap
-                  scrollEnabled={false}
-                  region={focus ? { latitude: focus.latitude, longitude: focus.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 } : DEFAULT_REGION}
-                  markers={markers}
-                />
-              </View>
+              <Card padded={false} style={{ overflow: 'hidden' }}>
+                {driverName ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 }}>
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: theme.colors.primarySoft,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <BikeIcon size={22} color={theme.colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: theme.colors.text, fontWeight: '800' }}>{driverName}</Text>
+                      <Text style={{ color: theme.colors.textMuted, ...theme.type.caption }}>Your driver is on the way</Text>
+                    </View>
+                  </View>
+                ) : null}
+                <View style={{ height: 220 }}>
+                  <AppMap
+                    scrollEnabled={false}
+                    region={focus ? { latitude: focus.latitude, longitude: focus.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 } : DEFAULT_REGION}
+                    markers={markers}
+                  />
+                </View>
+              </Card>
             );
           })()}
 
           <Card>
+            <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 16, marginBottom: 12 }}>Order summary</Text>
             {order.items.map((item) => (
-              <View key={item.id} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ color: theme.colors.text }}>
-                  {item.quantity}× {item.productName}
+              <View key={item.id} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={{ color: theme.colors.text, flex: 1, paddingRight: 12 }}>
+                  <Text style={{ fontWeight: '800', color: theme.colors.primary }}>{item.quantity}× </Text>
+                  {item.productName}
                 </Text>
-                <Text style={{ color: theme.colors.textMuted }}>{formatSar(item.lineTotalMinor)}</Text>
+                <Text style={{ color: theme.colors.textMuted, fontWeight: '600' }}>{formatSar(item.lineTotalMinor)}</Text>
               </View>
             ))}
-            <View style={{ height: 1, backgroundColor: theme.colors.border, marginVertical: 6 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ color: theme.colors.text, fontWeight: '800' }}>Total</Text>
-              <Text style={{ color: theme.colors.text, fontWeight: '800' }}>{formatSar(order.totalMinor)}</Text>
+            <View style={{ height: 1, backgroundColor: theme.colors.border, marginVertical: 8 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 17 }}>Total</Text>
+              <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 17 }}>{formatSar(order.totalMinor)}</Text>
             </View>
           </Card>
 
-          <PrimaryButton label="Back to home" onPress={() => navigation.replace('Branches')} />
+          <SecondaryButton label="Back to home" onPress={() => navigation.replace('Branches')} />
         </ScrollView>
       ) : null}
     </Screen>

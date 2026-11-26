@@ -4,9 +4,10 @@ import { ScrollView, Text, View } from 'react-native';
 
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
-import { Card, Screen } from '../components/ui';
+import { Card, PriceTag, Screen, SectionTitle } from '../components/ui';
+import { CartIcon, PlusIcon } from '../components/icons';
 import { useAsync } from '../hooks/useAsync';
-import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton } from '../motion';
+import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton, Stagger } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
@@ -35,22 +36,34 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
   };
 
   const cartButton = (
-    <PressableScale accessibilityRole="button" accessibilityLabel="View cart" onPress={() => navigation.navigate('Cart')}>
-      <View>
-        <Text style={{ fontSize: 24 }}>🛒</Text>
-        <View style={{ position: 'absolute', top: -6, right: -10 }}>
-          <CartBadge count={count} />
-        </View>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel="View cart"
+      onPress={() => navigation.navigate('Cart')}
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: theme.colors.surface,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <CartIcon size={21} color={theme.colors.text} />
+      <View style={{ position: 'absolute', top: -5, right: -6 }}>
+        <CartBadge count={count} />
       </View>
     </PressableScale>
   );
 
   return (
-    <Screen title={branchName} onBack={() => navigation.goBack()} right={cartButton}>
+    <Screen title={branchName} subtitle="Tap + to add to your cart" onBack={() => navigation.goBack()} right={cartButton}>
       {loading ? (
         <View style={{ padding: 20, gap: 12 }}>
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} height={72} radius={theme.radius.md} />
+            <Skeleton key={i} height={84} radius={theme.radius.lg} />
           ))}
         </View>
       ) : error ? (
@@ -58,45 +71,46 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
       ) : !data || data.categories.length === 0 ? (
         <EmptyState title="Menu is empty" message="This branch has nothing available right now." />
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: count > 0 ? 96 : 24 }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: count > 0 ? 104 : 24 }}>
           {data.categories.map((category) => (
-            <View key={category.id} style={{ marginBottom: 20 }}>
-              <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
-                {category.name}
-              </Text>
+            <View key={category.id} style={{ marginBottom: 22 }}>
+              <SectionTitle label={category.name} />
               <View style={{ gap: 10 }}>
-                {category.products.map((product) => (
-                  <Card key={product.id}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ flex: 1, paddingRight: 12 }}>
-                        <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
-                        {product.description ? (
-                          <Text style={{ color: theme.colors.textMuted, marginTop: 2 }} numberOfLines={2}>
-                            {product.description}
-                          </Text>
-                        ) : null}
-                        <Text style={{ color: theme.colors.primary, fontWeight: '700', marginTop: 6 }}>
-                          {formatSar(product.priceMinor)}
-                        </Text>
+                <Stagger>
+                  {category.products.map((product) => (
+                    <Card key={product.id}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flex: 1, paddingRight: 12 }}>
+                          <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '800' }}>{product.name}</Text>
+                          {product.description ? (
+                            <Text style={{ color: theme.colors.textMuted, ...theme.type.caption, marginTop: 3 }} numberOfLines={2}>
+                              {product.description}
+                            </Text>
+                          ) : null}
+                          <PriceTag label={formatSar(product.priceMinor)} style={{ marginTop: 8 }} />
+                        </View>
+                        <PressableScale
+                          accessibilityRole="button"
+                          accessibilityLabel={`Add ${product.name}`}
+                          onPress={() => add(product)}
+                          style={[
+                            {
+                              backgroundColor: theme.colors.primary,
+                              width: 44,
+                              height: 44,
+                              borderRadius: 22,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            },
+                            theme.elevation(1),
+                          ]}
+                        >
+                          <PlusIcon size={22} color={theme.colors.onPrimary} />
+                        </PressableScale>
                       </View>
-                      <PressableScale
-                        accessibilityRole="button"
-                        accessibilityLabel={`Add ${product.name}`}
-                        onPress={() => add(product)}
-                        style={{
-                          backgroundColor: theme.colors.primary,
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Text style={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: '700' }}>+</Text>
-                      </PressableScale>
-                    </View>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </Stagger>
               </View>
             </View>
           ))}
@@ -107,19 +121,30 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
         <View style={{ position: 'absolute', left: 16, right: 16, bottom: 20 }}>
           <PressableScale
             accessibilityRole="button"
+            accessibilityLabel={`View cart, ${count} item${count === 1 ? '' : 's'}`}
             onPress={() => navigation.navigate('Cart')}
-            style={{
-              backgroundColor: theme.colors.primary,
-              borderRadius: theme.radius.pill,
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
+            style={[
+              {
+                backgroundColor: theme.colors.primary,
+                borderRadius: theme.radius.pill,
+                paddingVertical: 16,
+                paddingHorizontal: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              },
+              theme.elevation(3),
+            ]}
           >
-            <Text style={{ color: theme.colors.onPrimary, fontWeight: '800', fontSize: 16 }}>View cart</Text>
-            <Text style={{ color: theme.colors.onPrimary, fontWeight: '800', fontSize: 16 }}>{count} item{count === 1 ? '' : 's'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <CartIcon size={20} color={theme.colors.onPrimary} />
+              <Text style={{ color: theme.colors.onPrimary, fontWeight: '800', fontSize: 16 }}>View cart</Text>
+            </View>
+            <View style={{ backgroundColor: theme.colors.gold, borderRadius: theme.radius.pill, paddingVertical: 3, paddingHorizontal: 12 }}>
+              <Text style={{ color: theme.colors.onGold, fontWeight: '800', fontSize: 14 }}>
+                {count} item{count === 1 ? '' : 's'}
+              </Text>
+            </View>
           </PressableScale>
         </View>
       ) : null}
