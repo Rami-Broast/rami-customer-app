@@ -1,10 +1,11 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
 import { Card, Screen } from '../components/ui';
+import { countProducts, filterMenuCategories } from '../features/menu/menu-filter';
 import { useAsync } from '../hooks/useAsync';
 import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton } from '../motion';
 import { RootStackParamList } from '../navigation/types';
@@ -12,13 +13,24 @@ import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
 import type { MenuProduct } from '../api/types';
 
-/** A branch menu: browse categories/products and add to cart. */
+/** A branch menu: browse categories/products, search, and add to cart. */
 export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'Menu'>): React.JSX.Element {
   const theme = useTheme();
   const { api } = useAuth();
   const { cart, count, dispatch } = useCart();
   const { branchId, branchName } = route.params;
   const { data, loading, error, reload } = useAsync(() => api.menu(branchId), [branchId]);
+
+  const [query, setQuery] = useState('');
+  const scrollRef = useRef<ScrollView>(null);
+  // Y offset of each category section within the scroll view, for category jump.
+  const sectionY = useRef<Record<string, number>>({});
+
+  const categories = useMemo(
+    () => (data ? filterMenuCategories(data.categories, query) : []),
+    [data, query],
+  );
+  const searching = query.trim().length > 0;
 
   const add = (product: MenuProduct): void => {
     dispatch({
@@ -32,6 +44,13 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
         addonNames: [],
       },
     });
+  };
+
+  const jumpTo = (categoryId: string): void => {
+    const y = sectionY.current[categoryId];
+    if (typeof y === 'number') {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 8), animated: true });
+    }
   };
 
   const cartButton = (
@@ -58,49 +77,111 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
       ) : !data || data.categories.length === 0 ? (
         <EmptyState title="Menu is empty" message="This branch has nothing available right now." />
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: count > 0 ? 96 : 24 }}>
-          {data.categories.map((category) => (
-            <View key={category.id} style={{ marginBottom: 20 }}>
-              <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
-                {category.name}
-              </Text>
-              <View style={{ gap: 10 }}>
-                {category.products.map((product) => (
-                  <Card key={product.id}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ flex: 1, paddingRight: 12 }}>
-                        <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
-                        {product.description ? (
-                          <Text style={{ color: theme.colors.textMuted, marginTop: 2 }} numberOfLines={2}>
-                            {product.description}
-                          </Text>
-                        ) : null}
-                        <Text style={{ color: theme.colors.primary, fontWeight: '700', marginTop: 6 }}>
-                          {formatSar(product.priceMinor)}
-                        </Text>
-                      </View>
-                      <PressableScale
-                        accessibilityRole="button"
-                        accessibilityLabel={`Add ${product.name}`}
-                        onPress={() => add(product)}
-                        style={{
-                          backgroundColor: theme.colors.primary,
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Text style={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: '700' }}>+</Text>
-                      </PressableScale>
-                    </View>
-                  </Card>
-                ))}
-              </View>
+        <>
+          {/* Search box — filters the whole menu as you type. */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, paddingHorizontal: 12 }}>
+              <Text style={{ fontSize: 16, color: theme.colors.textMuted }}>🔍</Text>
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search the menu"
+                placeholderTextColor={theme.colors.textMuted}
+                accessibilityLabel="Search the menu"
+                returnKeyType="search"
+                style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, fontSize: 16, color: theme.colors.text }}
+              />
+              {searching ? (
+                <PressableScale accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery('')}>
+                  <Text style={{ fontSize: 18, color: theme.colors.textMuted, paddingHorizontal: 4 }}>✕</Text>
+                </PressableScale>
+              ) : null}
             </View>
-          ))}
-        </ScrollView>
+          </View>
+
+          {/* Category chips — jump to a section. Reflects the current (filtered) list. */}
+          {categories.length > 1 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
+            >
+              {categories.map((category) => (
+                <PressableScale
+                  key={category.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Jump to ${category.name}`}
+                  onPress={() => jumpTo(category.id)}
+                  style={{
+                    backgroundColor: theme.colors.surfaceAlt,
+                    borderRadius: theme.radius.pill,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                  }}
+                >
+                  <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 14 }}>{category.name}</Text>
+                </PressableScale>
+              ))}
+            </ScrollView>
+          ) : null}
+
+          {categories.length === 0 ? (
+            <EmptyState
+              title="No matches"
+              message={`Nothing on the menu matches “${query.trim()}”.`}
+            />
+          ) : (
+            <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: count > 0 ? 96 : 24 }}>
+              {categories.map((category) => (
+                <View
+                  key={category.id}
+                  onLayout={(e) => {
+                    sectionY.current[category.id] = e.nativeEvent.layout.y;
+                  }}
+                  style={{ marginBottom: 20 }}
+                >
+                  <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
+                    {category.name}
+                  </Text>
+                  <View style={{ gap: 10 }}>
+                    {category.products.map((product) => (
+                      <Card key={product.id}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ flex: 1, paddingRight: 12 }}>
+                            <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
+                            {product.description ? (
+                              <Text style={{ color: theme.colors.textMuted, marginTop: 2 }} numberOfLines={2}>
+                                {product.description}
+                              </Text>
+                            ) : null}
+                            <Text style={{ color: theme.colors.primary, fontWeight: '700', marginTop: 6 }}>
+                              {formatSar(product.priceMinor)}
+                            </Text>
+                          </View>
+                          <PressableScale
+                            accessibilityRole="button"
+                            accessibilityLabel={`Add ${product.name}`}
+                            onPress={() => add(product)}
+                            style={{
+                              backgroundColor: theme.colors.primary,
+                              width: 40,
+                              height: 40,
+                              borderRadius: 20,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Text style={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: '700' }}>+</Text>
+                          </PressableScale>
+                        </View>
+                      </Card>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </>
       )}
 
       {count > 0 && cart.branchId === branchId ? (
