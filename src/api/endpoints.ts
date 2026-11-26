@@ -44,7 +44,9 @@ export class Api {
 
   // --- Catalog (public) -----------------------------------------------------
   listBranches(): Promise<Branch[]> {
-    return this.http.request('/branches', { public: true });
+    // Public customer list. NOT `/branches`, which is the staff route behind
+    // `branches:read` and 401s an unauthenticated customer.
+    return this.http.request('/customer/branches', { public: true });
   }
 
   menu(branchId: string): Promise<Menu> {
@@ -52,7 +54,9 @@ export class Api {
   }
 
   quote(input: { branchId: string; type: OrderType; items: OrderItemInput[] }): Promise<PriceQuote> {
-    return this.http.request('/pricing/quote', { method: 'POST', body: input, public: true });
+    // Authenticated: `POST /pricing/quote` has no `@Public()`. `public: true`
+    // stripped the bearer token and every quote 401'd, even signed in.
+    return this.http.request('/pricing/quote', { method: 'POST', body: input });
   }
 
   // --- Customer orders (authenticated) --------------------------------------
