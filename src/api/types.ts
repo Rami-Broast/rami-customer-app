@@ -78,13 +78,22 @@ export interface PriceQuote {
   vatRate: string;
 }
 
+export interface OrderItemModifier {
+  /** Null when the add-on was deleted from the catalogue since the order. */
+  addonId: string | null;
+  addonName: string;
+}
+
 export interface OrderItem {
   id: string;
+  /** Null when the product was deleted since the order — then it can't be reordered. */
+  productId: string | null;
   productName: string;
   variantName: string | null;
   quantity: number;
   unitPriceMinor: number;
   lineTotalMinor: number;
+  modifiers?: OrderItemModifier[];
 }
 
 export interface Order {
