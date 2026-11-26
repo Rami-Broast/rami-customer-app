@@ -5,7 +5,7 @@ import { ScrollView, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
 import { Card, Screen } from '../components/ui';
-import { countProducts, filterMenuCategories } from '../features/menu/menu-filter';
+import { filterMenuCategories } from '../features/menu/menu-filter';
 import { OffersCarousel } from '../features/offers/OffersCarousel';
 import { useAsync } from '../hooks/useAsync';
 import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton, Toast } from '../motion';
