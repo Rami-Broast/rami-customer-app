@@ -68,7 +68,7 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
     <Screen
       title="Your order"
       subtitle={order ? `Order ${order.orderNumber}` : undefined}
-      onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.replace('Branches'))}
+      onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.replace('Menu'))}
     >
       {loading && !order ? (
         <View style={{ padding: 20, gap: 12 }}>
@@ -152,7 +152,7 @@ export function OrderTrackingScreen({ route, navigation }: NativeStackScreenProp
             </View>
           </Card>
 
-          <SecondaryButton label="Back to home" onPress={() => navigation.replace('Branches')} />
+          <SecondaryButton label="Back to home" onPress={() => navigation.replace('Menu')} />
         </ScrollView>
       ) : null}
     </Screen>

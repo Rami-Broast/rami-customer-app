@@ -18,8 +18,12 @@ import { useTheme } from '../theme/theme';
 const LOGO = require('../../assets/logo.jpeg');
 const LOGO_ASPECT = 902 / 821;
 
-/** How long the fully-revealed logo is held before the screen hands off, in ms. */
-const HOLD_MS = 850;
+/**
+ * How long the fully-revealed logo is held before the screen hands off, in ms.
+ * ~1.4s hold plus the enter spring and exit fade lands the whole launch around
+ * 1.5–1.8s — a deliberate, professional beat rather than a flash.
+ */
+const HOLD_MS = 1400;
 
 export interface LaunchScreenProps {
   /** Called once the launch animation has finished and the app can be revealed. */

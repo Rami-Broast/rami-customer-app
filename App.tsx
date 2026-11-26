@@ -5,7 +5,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from './src/auth/AuthProvider';
+import { BranchProvider } from './src/branch/BranchProvider';
 import { CartProvider } from './src/cart/CartProvider';
+import { FlyToCartProvider } from './src/cart/FlyToCart';
 import { MotionProvider } from './src/motion';
 import { LaunchScreen } from './src/launch/LaunchScreen';
 import { RootNavigator } from './src/navigation/RootNavigator';
@@ -27,11 +29,15 @@ export default function App(): React.JSX.Element {
       <SafeAreaProvider>
         <MotionProvider>
           <AuthProvider>
-            <CartProvider>
-              <StatusBar style="auto" />
-              <RootNavigator />
-              {!launched ? <LaunchScreen onFinish={() => setLaunched(true)} /> : null}
-            </CartProvider>
+            <BranchProvider>
+              <CartProvider>
+                <FlyToCartProvider>
+                  <StatusBar style="auto" />
+                  <RootNavigator />
+                  {!launched ? <LaunchScreen onFinish={() => setLaunched(true)} /> : null}
+                </FlyToCartProvider>
+              </CartProvider>
+            </BranchProvider>
           </AuthProvider>
         </MotionProvider>
       </SafeAreaProvider>

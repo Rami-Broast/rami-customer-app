@@ -92,10 +92,15 @@ const GOLD = '#F6D456';
 const CREAM = '#FFF7EA';
 
 const light: Theme['colors'] = {
-  background: '#FCF6EC',
+  // A clearly cream ground (owner request). It was #FCF6EC — so close to white
+  // that the white cards on it read as one flat sheet; warming it lets the
+  // surfaces (kept white) stand off the page.
+  background: '#F7EDD8',
   surface: '#FFFFFF',
-  surfaceAlt: '#F6EEDF',
-  border: '#EADECB',
+  // Nudged a touch deeper so chips, selected rows and skeletons still read as
+  // distinct against the creamier background rather than blending into it.
+  surfaceAlt: '#EFE3C9',
+  border: '#E6D9BF',
   text: '#2A1A14',
   textMuted: '#8A756A',
   primary: MAROON,

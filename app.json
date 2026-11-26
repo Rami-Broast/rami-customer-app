@@ -34,7 +34,7 @@
     "plugins": [
       [
         "expo-location",
-        { "locationWhenInUsePermission": "Allow Rami Broast to use your location to set your delivery address." }
+        { "locationWhenInUsePermission": "Allow Rami Broast to use your location to find your nearest branch and set your delivery address." }
       ]
     ],
     "extra": {
