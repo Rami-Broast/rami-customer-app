@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { useAuth } from '../auth/AuthProvider';
-import { PrimaryButton, Screen } from '../components/ui';
+import { Card, PrimaryButton, Screen, SecondaryButton } from '../components/ui';
 import { PaymentStateView } from '../features/payment/PaymentStateView';
 import { paymentVisualForServerStatus } from '../features/payment/payment-state.model';
 import { PAYMENT_METHOD, PAYMENT_STATUS, PaymentStatus } from '../types/backend';
@@ -80,14 +80,16 @@ export function PaymentProcessingScreen({
   return (
     <Screen title="Payment">
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-        <PaymentStateView status={status} />
-        <Text style={{ color: theme.colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
-          Your bank confirms this with us directly. You can safely track your order while it finishes.
-        </Text>
+        <Card style={{ paddingVertical: 28 }}>
+          <PaymentStateView status={status} />
+          <Text style={{ color: theme.colors.textMuted, ...theme.type.caption, textAlign: 'center', marginTop: 4, paddingHorizontal: 12 }}>
+            Your bank confirms this with us directly. You can safely track your order while it finishes.
+          </Text>
+        </Card>
         <View style={{ marginTop: 24, gap: 10 }}>
           <PrimaryButton label="Track my order" onPress={() => navigation.replace('OrderTracking', { orderId })} />
           {visual === 'failed' || visual === 'cancelled' ? (
-            <PrimaryButton label="Back to orders" onPress={() => navigation.replace('Orders')} />
+            <SecondaryButton label="Back to orders" onPress={() => navigation.replace('Orders')} />
           ) : null}
         </View>
       </View>

@@ -4,11 +4,12 @@ import { ScrollView, Text, TextInput, View } from 'react-native';
 
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
-import { Card, Screen } from '../components/ui';
+import { Card, PriceTag, Screen, SectionTitle } from '../components/ui';
+import { CartIcon, PlusIcon } from '../components/icons';
 import { filterMenuCategories } from '../features/menu/menu-filter';
 import { OffersCarousel } from '../features/offers/OffersCarousel';
 import { useAsync } from '../hooks/useAsync';
-import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton, Toast } from '../motion';
+import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton, Stagger, Toast } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
@@ -28,11 +29,6 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
 
   const [query, setQuery] = useState('');
   const [appliedToast, setAppliedToast] = useState<string | null>(null);
-
-  const applyOffer = (code: string): void => {
-    dispatch({ type: 'SET_COUPON', code });
-    setAppliedToast(`Offer applied · ${code}`);
-  };
   const scrollRef = useRef<ScrollView>(null);
   // Y offset of each category section within the scroll view, for category jump.
   const sectionY = useRef<Record<string, number>>({});
@@ -42,6 +38,11 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
     [data, query],
   );
   const searching = query.trim().length > 0;
+
+  const applyOffer = (code: string): void => {
+    dispatch({ type: 'SET_COUPON', code });
+    setAppliedToast(`Offer applied · ${code}`);
+  };
 
   const add = (product: MenuProduct): void => {
     // Honour the branch's sell/don't-sell gate: the backend rejects an
@@ -71,18 +72,30 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
   };
 
   const cartButton = (
-    <PressableScale accessibilityRole="button" accessibilityLabel="View cart" onPress={() => navigation.navigate('Cart')}>
-      <View>
-        <Text style={{ fontSize: 24 }}>🛒</Text>
-        <View style={{ position: 'absolute', top: -6, right: -10 }}>
-          <CartBadge count={count} />
-        </View>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel="View cart"
+      onPress={() => navigation.navigate('Cart')}
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: theme.colors.surface,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <CartIcon size={21} color={theme.colors.text} />
+      <View style={{ position: 'absolute', top: -5, right: -6 }}>
+        <CartBadge count={count} />
       </View>
     </PressableScale>
   );
 
   return (
-    <Screen title={branchName} onBack={() => navigation.goBack()} right={cartButton}>
+    <Screen title={branchName} subtitle="Tap + to add to your cart" onBack={() => navigation.goBack()} right={cartButton}>
       <Toast
         visible={!!appliedToast}
         message={appliedToast ?? ''}
@@ -92,7 +105,7 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
       {loading ? (
         <View style={{ padding: 20, gap: 12 }}>
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} height={72} radius={theme.radius.md} />
+            <Skeleton key={i} height={84} radius={theme.radius.lg} />
           ))}
         </View>
       ) : error ? (
@@ -154,83 +167,81 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
           ) : null}
 
           {categories.length === 0 ? (
-            <EmptyState
-              title="No matches"
-              message={`Nothing on the menu matches “${query.trim()}”.`}
-            />
+            <EmptyState title="No matches" message={`Nothing on the menu matches “${query.trim()}”.`} />
           ) : (
-            <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: count > 0 ? 96 : 24 }}>
+            <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: count > 0 ? 104 : 24 }}>
               {categories.map((category) => (
                 <View
                   key={category.id}
                   onLayout={(e) => {
                     sectionY.current[category.id] = e.nativeEvent.layout.y;
                   }}
-                  style={{ marginBottom: 20 }}
+                  style={{ marginBottom: 22 }}
                 >
-                  <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
-                    {category.name}
-                  </Text>
+                  <SectionTitle label={category.name} />
                   <View style={{ gap: 10 }}>
-                    {category.products.map((product) => {
-                      const soldOut = !product.isAvailable;
-                      return (
-                        <Card key={product.id}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', opacity: soldOut ? 0.55 : 1 }}>
-                            <View style={{ flex: 1, paddingRight: 12 }}>
-                              <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
-                              {product.description ? (
-                                <Text style={{ color: theme.colors.textMuted, marginTop: 2 }} numberOfLines={2}>
-                                  {product.description}
-                                </Text>
-                              ) : null}
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                                <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>
-                                  {formatSar(product.priceMinor)}
-                                </Text>
-                                {soldOut ? (
-                                  <View style={{ backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radius.pill, paddingVertical: 2, paddingHorizontal: 8 }}>
-                                    <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: '700' }}>Sold out</Text>
-                                  </View>
+                    <Stagger>
+                      {category.products.map((product) => {
+                        const soldOut = !product.isAvailable;
+                        return (
+                          <Card key={product.id}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', opacity: soldOut ? 0.55 : 1 }}>
+                              <View style={{ flex: 1, paddingRight: 12 }}>
+                                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '800' }}>{product.name}</Text>
+                                {product.description ? (
+                                  <Text style={{ color: theme.colors.textMuted, ...theme.type.caption, marginTop: 3 }} numberOfLines={2}>
+                                    {product.description}
+                                  </Text>
                                 ) : null}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                                  <PriceTag label={formatSar(product.priceMinor)} />
+                                  {soldOut ? (
+                                    <View style={{ backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radius.pill, paddingVertical: 2, paddingHorizontal: 8 }}>
+                                      <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: '700' }}>Sold out</Text>
+                                    </View>
+                                  ) : null}
+                                </View>
                               </View>
+                              {soldOut ? (
+                                <View
+                                  accessibilityLabel={`${product.name} is sold out`}
+                                  style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 22,
+                                    borderWidth: 1,
+                                    borderColor: theme.colors.border,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <Text style={{ color: theme.colors.textMuted, fontSize: 20 }}>×</Text>
+                                </View>
+                              ) : (
+                                <PressableScale
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Add ${product.name}`}
+                                  onPress={() => add(product)}
+                                  style={[
+                                    {
+                                      backgroundColor: theme.colors.primary,
+                                      width: 44,
+                                      height: 44,
+                                      borderRadius: 22,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    },
+                                    theme.elevation(1),
+                                  ]}
+                                >
+                                  <PlusIcon size={22} color={theme.colors.onPrimary} />
+                                </PressableScale>
+                              )}
                             </View>
-                            {soldOut ? (
-                              <View
-                                accessibilityLabel={`${product.name} is sold out`}
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: 20,
-                                  borderWidth: 1,
-                                  borderColor: theme.colors.border,
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <Text style={{ color: theme.colors.textMuted, fontSize: 18 }}>×</Text>
-                              </View>
-                            ) : (
-                              <PressableScale
-                                accessibilityRole="button"
-                                accessibilityLabel={`Add ${product.name}`}
-                                onPress={() => add(product)}
-                                style={{
-                                  backgroundColor: theme.colors.primary,
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: 20,
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <Text style={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: '700' }}>+</Text>
-                              </PressableScale>
-                            )}
-                          </View>
-                        </Card>
-                      );
-                    })}
+                          </Card>
+                        );
+                      })}
+                    </Stagger>
                   </View>
                 </View>
               ))}
@@ -243,19 +254,30 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
         <View style={{ position: 'absolute', left: 16, right: 16, bottom: 20 }}>
           <PressableScale
             accessibilityRole="button"
+            accessibilityLabel={`View cart, ${count} item${count === 1 ? '' : 's'}`}
             onPress={() => navigation.navigate('Cart')}
-            style={{
-              backgroundColor: theme.colors.primary,
-              borderRadius: theme.radius.pill,
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
+            style={[
+              {
+                backgroundColor: theme.colors.primary,
+                borderRadius: theme.radius.pill,
+                paddingVertical: 16,
+                paddingHorizontal: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              },
+              theme.elevation(3),
+            ]}
           >
-            <Text style={{ color: theme.colors.onPrimary, fontWeight: '800', fontSize: 16 }}>View cart</Text>
-            <Text style={{ color: theme.colors.onPrimary, fontWeight: '800', fontSize: 16 }}>{count} item{count === 1 ? '' : 's'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <CartIcon size={20} color={theme.colors.onPrimary} />
+              <Text style={{ color: theme.colors.onPrimary, fontWeight: '800', fontSize: 16 }}>View cart</Text>
+            </View>
+            <View style={{ backgroundColor: theme.colors.gold, borderRadius: theme.radius.pill, paddingVertical: 3, paddingHorizontal: 12 }}>
+              <Text style={{ color: theme.colors.onGold, fontWeight: '800', fontSize: 14 }}>
+                {count} item{count === 1 ? '' : 's'}
+              </Text>
+            </View>
           </PressableScale>
         </View>
       ) : null}
