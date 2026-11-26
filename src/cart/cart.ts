@@ -26,6 +26,13 @@ export interface CartLine {
 export interface Cart {
   branchId: string | null;
   lines: CartLine[];
+  /**
+   * A coupon code the customer applied from the Offers carousel or typed at
+   * checkout. The backend is the authority — it re-validates the code at
+   * `/pricing/quote` and at placement — so this is only *which code to send*,
+   * never proof it is valid or what it is worth.
+   */
+  couponCode?: string;
 }
 
 export const EMPTY_CART: Cart = { branchId: null, lines: [] };
@@ -34,6 +41,7 @@ export type CartAction =
   | { type: 'ADD'; branchId: string; line: Omit<CartLine, 'key' | 'quantity'>; quantity?: number }
   | { type: 'SET_QTY'; key: string; quantity: number }
   | { type: 'REMOVE'; key: string }
+  | { type: 'SET_COUPON'; code: string }
   | { type: 'CLEAR' };
 
 /** A stable line key so the same product+addons stacks instead of duplicating. */
@@ -45,15 +53,22 @@ export function cartReducer(state: Cart, action: CartAction): Cart {
   switch (action.type) {
     case 'ADD': {
       // Adding from a different branch replaces the cart — an order is always
-      // for one branch, and mixing would be meaningless.
-      const base = state.branchId === action.branchId ? state : { branchId: action.branchId, lines: [] };
+      // for one branch, and mixing would be meaningless. A coupon is dropped on
+      // that switch: it may be a code for the branch being left behind, and
+      // carrying it to a new branch would send a code the checkout then refuses.
+      const sameBranch = state.branchId === action.branchId;
+      const base = sameBranch ? state : { branchId: action.branchId, lines: [] };
       const key = lineKey(action.line.productId, action.line.addonIds);
       const qty = Math.max(1, action.quantity ?? 1);
       const existing = base.lines.find((l) => l.key === key);
       const lines = existing
         ? base.lines.map((l) => (l.key === key ? { ...l, quantity: l.quantity + qty } : l))
         : [...base.lines, { ...action.line, key, quantity: qty }];
-      return { branchId: action.branchId, lines };
+      return { branchId: action.branchId, lines, couponCode: sameBranch ? state.couponCode : undefined };
+    }
+    case 'SET_COUPON': {
+      const code = action.code.trim().toUpperCase();
+      return { ...state, couponCode: code === '' ? undefined : code };
     }
     case 'SET_QTY': {
       if (action.quantity <= 0) {
@@ -75,7 +90,12 @@ export function cartReducer(state: Cart, action: CartAction): Cart {
 
 function removeLine(state: Cart, key: string): Cart {
   const lines = state.lines.filter((l) => l.key !== key);
-  return { branchId: lines.length > 0 ? state.branchId : null, lines };
+  // An empty cart resets fully (branch and coupon); otherwise keep the rest of
+  // the cart — including any applied coupon — and just drop the line.
+  if (lines.length === 0) {
+    return EMPTY_CART;
+  }
+  return { ...state, lines };
 }
 
 /** Total item count across all lines — what the cart badge shows. */

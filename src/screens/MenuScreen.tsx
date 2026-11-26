@@ -6,8 +6,9 @@ import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
 import { Card, Screen } from '../components/ui';
 import { countProducts, filterMenuCategories } from '../features/menu/menu-filter';
+import { OffersCarousel } from '../features/offers/OffersCarousel';
 import { useAsync } from '../hooks/useAsync';
-import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton } from '../motion';
+import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton, Toast } from '../motion';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
@@ -20,8 +21,18 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
   const { cart, count, dispatch } = useCart();
   const { branchId, branchName } = route.params;
   const { data, loading, error, reload } = useAsync(() => api.menu(branchId), [branchId]);
+  // Offers are published coupons, served app-wide (not per branch). Failure is
+  // non-fatal — the menu is the point, so the carousel simply does not render.
+  const offersState = useAsync(() => api.config(), []);
+  const offers = offersState.data?.offers ?? [];
 
   const [query, setQuery] = useState('');
+  const [appliedToast, setAppliedToast] = useState<string | null>(null);
+
+  const applyOffer = (code: string): void => {
+    dispatch({ type: 'SET_COUPON', code });
+    setAppliedToast(`Offer applied · ${code}`);
+  };
   const scrollRef = useRef<ScrollView>(null);
   // Y offset of each category section within the scroll view, for category jump.
   const sectionY = useRef<Record<string, number>>({});
@@ -66,6 +77,12 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
 
   return (
     <Screen title={branchName} onBack={() => navigation.goBack()} right={cartButton}>
+      <Toast
+        visible={!!appliedToast}
+        message={appliedToast ?? ''}
+        tone="success"
+        onHide={() => setAppliedToast(null)}
+      />
       {loading ? (
         <View style={{ padding: 20, gap: 12 }}>
           {[0, 1, 2, 3].map((i) => (
@@ -78,6 +95,11 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
         <EmptyState title="Menu is empty" message="This branch has nothing available right now." />
       ) : (
         <>
+          {/* Offers — published coupons; tapping applies the code to the cart. */}
+          {!searching ? (
+            <OffersCarousel offers={offers} appliedCode={cart.couponCode} onApply={applyOffer} />
+          ) : null}
+
           {/* Search box — filters the whole menu as you type. */}
           <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, paddingHorizontal: 12 }}>

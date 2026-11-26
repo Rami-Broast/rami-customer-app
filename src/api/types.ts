@@ -150,3 +150,31 @@ export interface DeliveryTracking {
     user: { fullName: string };
   } | null;
 }
+
+/** A published coupon surfaced as a tappable offer in the customer app. */
+export type OfferDiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT';
+
+export interface Offer {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  discountType: OfferDiscountType;
+  /** For PERCENTAGE, a whole-percent number (20 = 20%); for FIXED_AMOUNT, minor units. */
+  discountValue: number;
+  maxDiscountMinor?: number;
+  minSpendMinor?: number;
+  validUntil: string;
+}
+
+/**
+ * The public `/customer/config` payload. Only the fields the app consumes are
+ * typed; the backend sends more (banners, promotions), which are ignored here
+ * until a screen reads them.
+ */
+export interface CustomerConfig {
+  version: number;
+  features: Record<string, boolean>;
+  offers: Offer[];
+}

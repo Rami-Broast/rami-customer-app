@@ -80,4 +80,46 @@ describe('cart reducer', () => {
   it('lineKey is order-independent for addons', () => {
     expect(lineKey('p1', ['a2', 'a1'])).toBe(lineKey('p1', ['a1', 'a2']));
   });
+
+  it('SET_COUPON normalizes the code (trim + uppercase)', () => {
+    let cart: Cart = cartReducer(EMPTY_CART, addBurger());
+    cart = cartReducer(cart, { type: 'SET_COUPON', code: '  save10 ' });
+    expect(cart.couponCode).toBe('SAVE10');
+  });
+
+  it('SET_COUPON with an empty code clears the coupon', () => {
+    let cart: Cart = cartReducer(EMPTY_CART, addBurger());
+    cart = cartReducer(cart, { type: 'SET_COUPON', code: 'SAVE10' });
+    cart = cartReducer(cart, { type: 'SET_COUPON', code: '   ' });
+    expect(cart.couponCode).toBeUndefined();
+  });
+
+  it('keeps the coupon when adding more from the same branch', () => {
+    let cart: Cart = cartReducer(EMPTY_CART, addBurger());
+    cart = cartReducer(cart, { type: 'SET_COUPON', code: 'SAVE10' });
+    cart = cartReducer(cart, addBurger());
+    expect(cart.couponCode).toBe('SAVE10');
+  });
+
+  it('drops the coupon when switching branches', () => {
+    let cart: Cart = cartReducer(EMPTY_CART, addBurger());
+    cart = cartReducer(cart, { type: 'SET_COUPON', code: 'SAVE10' });
+    cart = cartReducer(cart, addBurger({ branchId: 'b2' }));
+    expect(cart.branchId).toBe('b2');
+    expect(cart.couponCode).toBeUndefined();
+  });
+
+  it('keeps the coupon when removing one of several lines, clears it when the cart empties', () => {
+    let cart: Cart = cartReducer(EMPTY_CART, addBurger());
+    cart = cartReducer(cart, {
+      type: 'ADD',
+      branchId: 'b1',
+      line: { productId: 'p2', productName: 'Fries', unitPriceMinor: 1000, addonIds: [], addonNames: [] },
+    });
+    cart = cartReducer(cart, { type: 'SET_COUPON', code: 'SAVE10' });
+    cart = cartReducer(cart, { type: 'REMOVE', key: lineKey('p2', []) });
+    expect(cart.couponCode).toBe('SAVE10');
+    cart = cartReducer(cart, { type: 'REMOVE', key: lineKey('p1', []) });
+    expect(cart).toEqual(EMPTY_CART);
+  });
 });
