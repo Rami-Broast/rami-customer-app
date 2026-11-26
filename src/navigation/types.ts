@@ -5,9 +5,9 @@ export type RootStackParamList = {
   // Auth flow
   Phone: undefined;
   Otp: { phone: string };
-  // Main flow
-  Branches: undefined;
-  Menu: { branchId: string; branchName: string };
+  // Main flow — Menu is home; the branch comes from BranchProvider, so params
+  // are optional (an explicit branch may still be passed to override).
+  Menu: { branchId?: string; branchName?: string } | undefined;
   Cart: undefined;
   Checkout: { type: OrderType };
   AddAddress: undefined;

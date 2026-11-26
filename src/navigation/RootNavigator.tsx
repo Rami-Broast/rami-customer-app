@@ -5,7 +5,6 @@ import React from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useReducedMotion } from '../motion';
 import { RootStackParamList } from './types';
-import { BranchesScreen } from '../screens/BranchesScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { MenuScreen } from '../screens/MenuScreen';
@@ -58,7 +57,6 @@ export function RootNavigator(): React.JSX.Element {
           </>
         ) : (
           <>
-            <Stack.Screen name="Branches" component={BranchesScreen} />
             <Stack.Screen name="Menu" component={MenuScreen} />
             <Stack.Screen name="Cart" component={CartScreen} options={{ animation: reduceMotion ? 'none' : 'slide_from_bottom' }} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
