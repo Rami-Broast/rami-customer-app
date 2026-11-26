@@ -13,6 +13,7 @@ function product(partial: Partial<MenuProduct> & { id: string; name: string }): 
     imageUrl: null,
     priceMinor: 1000,
     taxClass: 'standard',
+    isAvailable: true,
     variants: [],
     modifierGroups: [],
     ...partial,

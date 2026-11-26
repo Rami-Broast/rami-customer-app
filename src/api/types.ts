@@ -48,6 +48,10 @@ export interface MenuProduct {
   imageUrl: string | null;
   priceMinor: number;
   taxClass: string;
+  /** Per-branch sell/don't-sell gate. A client that ignores it builds a cart that fails at checkout. */
+  isAvailable: boolean;
+  /** When a timed stock-out ends (ISO), or null (on sale, or off with no time promised). */
+  unavailableUntil?: string | null;
   variants: { id: string; name: string; priceMinor: number; isDefault: boolean }[];
   modifierGroups: MenuModifierGroup[];
 }

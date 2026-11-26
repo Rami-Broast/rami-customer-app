@@ -44,6 +44,12 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
   const searching = query.trim().length > 0;
 
   const add = (product: MenuProduct): void => {
+    // Honour the branch's sell/don't-sell gate: the backend rejects an
+    // unavailable item at placement, so adding one here only produces a cart
+    // that fails at checkout with the customer waiting.
+    if (!product.isAvailable) {
+      return;
+    }
     dispatch({
       type: 'ADD',
       branchId,
@@ -166,38 +172,65 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
                     {category.name}
                   </Text>
                   <View style={{ gap: 10 }}>
-                    {category.products.map((product) => (
-                      <Card key={product.id}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <View style={{ flex: 1, paddingRight: 12 }}>
-                            <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
-                            {product.description ? (
-                              <Text style={{ color: theme.colors.textMuted, marginTop: 2 }} numberOfLines={2}>
-                                {product.description}
-                              </Text>
-                            ) : null}
-                            <Text style={{ color: theme.colors.primary, fontWeight: '700', marginTop: 6 }}>
-                              {formatSar(product.priceMinor)}
-                            </Text>
+                    {category.products.map((product) => {
+                      const soldOut = !product.isAvailable;
+                      return (
+                        <Card key={product.id}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', opacity: soldOut ? 0.55 : 1 }}>
+                            <View style={{ flex: 1, paddingRight: 12 }}>
+                              <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
+                              {product.description ? (
+                                <Text style={{ color: theme.colors.textMuted, marginTop: 2 }} numberOfLines={2}>
+                                  {product.description}
+                                </Text>
+                              ) : null}
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                                <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>
+                                  {formatSar(product.priceMinor)}
+                                </Text>
+                                {soldOut ? (
+                                  <View style={{ backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radius.pill, paddingVertical: 2, paddingHorizontal: 8 }}>
+                                    <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: '700' }}>Sold out</Text>
+                                  </View>
+                                ) : null}
+                              </View>
+                            </View>
+                            {soldOut ? (
+                              <View
+                                accessibilityLabel={`${product.name} is sold out`}
+                                style={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: 20,
+                                  borderWidth: 1,
+                                  borderColor: theme.colors.border,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Text style={{ color: theme.colors.textMuted, fontSize: 18 }}>×</Text>
+                              </View>
+                            ) : (
+                              <PressableScale
+                                accessibilityRole="button"
+                                accessibilityLabel={`Add ${product.name}`}
+                                onPress={() => add(product)}
+                                style={{
+                                  backgroundColor: theme.colors.primary,
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: 20,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Text style={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: '700' }}>+</Text>
+                              </PressableScale>
+                            )}
                           </View>
-                          <PressableScale
-                            accessibilityRole="button"
-                            accessibilityLabel={`Add ${product.name}`}
-                            onPress={() => add(product)}
-                            style={{
-                              backgroundColor: theme.colors.primary,
-                              width: 40,
-                              height: 40,
-                              borderRadius: 20,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Text style={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: '700' }}>+</Text>
-                          </PressableScale>
-                        </View>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </View>
                 </View>
               ))}
