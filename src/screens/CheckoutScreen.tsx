@@ -9,20 +9,27 @@ import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
 import { toOrderItems } from '../cart/cart';
 import { Card, LinkButton, PrimaryButton, Screen } from '../components/ui';
-import { BikeIcon, CardIcon, CashIcon, CheckIcon, PinIcon, StorefrontIcon } from '../components/icons';
+import { ApplePayMark, BikeIcon, CardIcon, CashIcon, MadaMark, PinIcon, StorefrontIcon } from '../components/icons';
 import { useAsync } from '../hooks/useAsync';
-import { BottomSheet, ErrorState, PressableScale, Skeleton, Toast } from '../motion';
+import { ErrorState, PressableScale, Skeleton, Toast } from '../motion';
 import { ORDER_TYPE, OrderType, PAYMENT_METHOD, PaymentMethod } from '../types/backend';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
 
 const METHOD_LABELS: Record<string, string> = {
-  [PAYMENT_METHOD.CARD]: 'Card',
+  [PAYMENT_METHOD.CARD]: 'Credit / debit card',
   [PAYMENT_METHOD.MADA]: 'mada',
   [PAYMENT_METHOD.APPLE_PAY]: 'Apple Pay',
   [PAYMENT_METHOD.CASH_ON_DELIVERY]: 'Cash on delivery',
 };
+
+const METHOD_ORDER: PaymentMethod[] = [
+  PAYMENT_METHOD.CARD,
+  PAYMENT_METHOD.MADA,
+  PAYMENT_METHOD.APPLE_PAY,
+  PAYMENT_METHOD.CASH_ON_DELIVERY,
+];
 
 /** Choose pickup or delivery, review the server quote, pick payment, place order. */
 export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'Checkout'>): React.JSX.Element {
@@ -35,7 +42,6 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
   const [type, setType] = useState<OrderType>(route.params.type);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [method, setMethod] = useState<PaymentMethod>(PAYMENT_METHOD.CARD);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
 
@@ -123,8 +129,58 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
     );
   };
 
-  const methodIcon = (m: PaymentMethod, color: string): React.ReactNode =>
-    m === PAYMENT_METHOD.CASH_ON_DELIVERY ? <CashIcon size={20} color={color} /> : <CardIcon size={20} color={color} />;
+  const methodMark = (m: PaymentMethod): React.ReactNode => {
+    if (m === PAYMENT_METHOD.MADA) {
+      return <MadaMark size={40} />;
+    }
+    if (m === PAYMENT_METHOD.APPLE_PAY) {
+      return <ApplePayMark size={52} />;
+    }
+    if (m === PAYMENT_METHOD.CASH_ON_DELIVERY) {
+      return <CashIcon size={22} color={theme.colors.text} />;
+    }
+    return <CardIcon size={24} color={theme.colors.text} />;
+  };
+
+  const methodRow = (m: PaymentMethod) => {
+    const active = method === m;
+    return (
+      <PressableScale
+        key={m}
+        accessibilityRole="button"
+        accessibilityLabel={METHOD_LABELS[m]}
+        accessibilityState={{ selected: active }}
+        onPress={() => setMethod(m)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 14,
+          paddingVertical: 14,
+          paddingHorizontal: 14,
+          borderRadius: theme.radius.lg,
+          borderWidth: 2,
+          borderColor: active ? theme.colors.primary : theme.colors.border,
+          backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface,
+        }}
+      >
+        <View style={{ width: 52, alignItems: 'center' }}>{methodMark(m)}</View>
+        <Text style={{ flex: 1, color: theme.colors.text, fontWeight: '800', fontSize: 15 }}>{METHOD_LABELS[m]}</Text>
+        <View
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            borderWidth: 2,
+            borderColor: active ? theme.colors.primary : theme.colors.border,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {active ? <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: theme.colors.primary }} /> : null}
+        </View>
+      </PressableScale>
+    );
+  };
 
   return (
     <Screen title="Checkout" onBack={() => navigation.goBack()}>
@@ -274,24 +330,13 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
           ) : null}
         </Card>
 
-        <Card>
-          <Text style={{ color: theme.colors.textMuted, ...theme.type.label, marginBottom: 10 }}>PAYMENT METHOD</Text>
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel={`Payment method: ${METHOD_LABELS[method]}. Change`}
-            onPress={() => setSheetOpen(true)}
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {methodIcon(method, theme.colors.primary)}
-              <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '800' }}>{METHOD_LABELS[method]}</Text>
-            </View>
-            <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>Change</Text>
-          </PressableScale>
-        </Card>
+        <View style={{ gap: 10 }}>
+          <Text style={{ color: theme.colors.textMuted, ...theme.type.label }}>PAYMENT METHOD</Text>
+          {METHOD_ORDER.map(methodRow)}
+        </View>
 
         <Text style={{ color: theme.colors.textMuted, ...theme.type.caption, textAlign: 'center', paddingHorizontal: 12 }}>
-          Payment is confirmed by our server — never by this screen alone.
+          Your card information is never stored by us. Payment is confirmed by our server — never by this screen alone.
         </Text>
       </ScrollView>
 
@@ -303,39 +348,6 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
           disabled={!quote || !!error}
         />
       </View>
-
-      <BottomSheet visible={sheetOpen} onClose={() => setSheetOpen(false)}>
-        <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 12 }}>Payment method</Text>
-        {[PAYMENT_METHOD.CARD, PAYMENT_METHOD.MADA, PAYMENT_METHOD.APPLE_PAY, PAYMENT_METHOD.CASH_ON_DELIVERY].map((m) => {
-          const selected = method === m;
-          return (
-            <PressableScale
-              key={m}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => {
-                setMethod(m);
-                setSheetOpen(false);
-              }}
-              style={{
-                paddingVertical: 14,
-                paddingHorizontal: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.border,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                {methodIcon(m, selected ? theme.colors.primary : theme.colors.textMuted)}
-                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: selected ? '800' : '500' }}>{METHOD_LABELS[m]}</Text>
-              </View>
-              {selected ? <CheckIcon size={20} color={theme.colors.primary} /> : null}
-            </PressableScale>
-          );
-        })}
-      </BottomSheet>
     </Screen>
   );
 }
