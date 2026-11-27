@@ -132,7 +132,7 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
 
   const headerRight = (
     <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-      {roundButton('My orders', <ReceiptIcon size={20} color={theme.colors.text} />, () => navigation.navigate('Orders'))}
+      {roundButton('My orders', <ReceiptIcon size={20} color={theme.colors.text} />, () => navigation.navigate('Main', { screen: 'Orders' }))}
       {roundButton('Sign out', <LogoutIcon size={20} color={theme.colors.text} />, () => signOut())}
       {cartButton}
     </View>

@@ -1,17 +1,38 @@
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
 import { OrderType } from '../types/backend';
 
-/** The app's screens and their params. One source of truth for navigation typing. */
+/** The bottom tabs shown after sign-in. */
+export type MainTabParamList = {
+  Home: undefined;
+  Search: undefined;
+  Orders: undefined;
+  Offers: undefined;
+  Account: undefined;
+};
+
+/** The app's stack screens and their params. One source of truth for typing. */
 export type RootStackParamList = {
   // Auth flow
   Phone: undefined;
   Otp: { phone: string };
-  // Main flow — Menu is home; the branch comes from BranchProvider, so params
-  // are optional (an explicit branch may still be passed to override).
+  // Main flow — the tabs, with the ordering screens pushed on top.
+  Main: NavigatorScreenParams<MainTabParamList> | undefined;
+  // Menu is the full menu; the branch comes from BranchProvider, so params are
+  // optional (an explicit branch may still be passed to override).
   Menu: { branchId?: string; branchName?: string } | undefined;
   Cart: undefined;
   Checkout: { type: OrderType };
   AddAddress: undefined;
+  Favorites: undefined;
   PaymentProcessing: { orderId: string };
   OrderTracking: { orderId: string };
-  Orders: undefined;
 };
+
+/** Props for a tab screen that can also push onto the root stack. */
+export type TabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, T>,
+  NativeStackScreenProps<RootStackParamList>
+>;

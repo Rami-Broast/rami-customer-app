@@ -4,17 +4,18 @@ import { ScrollView, Text, View } from 'react-native';
 
 import { useCart } from '../cart/CartProvider';
 import { estimatedTotalMinor } from '../cart/cart';
+import { useOrderMode } from '../order/OrderModeProvider';
 import { Card, LinkButton, PrimaryButton, Screen } from '../components/ui';
 import { EmptyState, PressableScale, QuantityStepper } from '../motion';
-import { ORDER_TYPE } from '../types/backend';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
 
-/** The cart: adjust quantities, remove, and go to checkout. Pickup-only for now. */
+/** The cart: adjust quantities, remove, and go to checkout. */
 export function CartScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Cart'>): React.JSX.Element {
   const theme = useTheme();
   const { cart, count, dispatch } = useCart();
+  const { mode } = useOrderMode();
 
   if (count === 0) {
     return (
@@ -74,7 +75,7 @@ export function CartScreen({ navigation }: NativeStackScreenProps<RootStackParam
         <Text style={{ color: theme.colors.textMuted, ...theme.type.caption, marginBottom: 12 }}>
           Final total, VAT and any delivery fee are confirmed at checkout.
         </Text>
-        <PrimaryButton label="Checkout" onPress={() => navigation.navigate('Checkout', { type: ORDER_TYPE.PICKUP })} />
+        <PrimaryButton label="Checkout" onPress={() => navigation.navigate('Checkout', { type: mode })} />
       </View>
     </Screen>
   );

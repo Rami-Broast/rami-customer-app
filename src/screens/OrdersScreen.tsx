@@ -1,4 +1,3 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
@@ -11,7 +10,7 @@ import { buildReorder } from '../features/order/reorder';
 import { STATUS_META } from '../features/order/order-status.model';
 import { useAsync } from '../hooks/useAsync';
 import { EmptyState, ErrorState, PressableScale, Skeleton, Stagger, Toast } from '../motion';
-import { RootStackParamList } from '../navigation/types';
+import { TabScreenProps } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { StatusTone } from '../features/order/order-status.model';
 import { useTheme } from '../theme/theme';
@@ -22,7 +21,7 @@ function pillTone(tone: StatusTone): PillTone {
 }
 
 /** My past and current orders. */
-export function OrdersScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Orders'>): React.JSX.Element {
+export function OrdersScreen({ navigation }: TabScreenProps<'Orders'>): React.JSX.Element {
   const theme = useTheme();
   const { api } = useAuth();
   const { dispatch } = useCart();
@@ -54,7 +53,7 @@ export function OrdersScreen({ navigation }: NativeStackScreenProps<RootStackPar
   };
 
   return (
-    <Screen title="My orders" onBack={() => navigation.goBack()}>
+    <Screen title="My orders">
       <Toast
         visible={!!toast}
         message={toast?.message ?? ''}
