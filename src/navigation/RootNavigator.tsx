@@ -5,11 +5,12 @@ import React from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useReducedMotion } from '../motion';
 import { RootStackParamList } from './types';
+import { MainTabs } from './MainTabs';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { MenuScreen } from '../screens/MenuScreen';
 import { OrderTrackingScreen } from '../screens/OrderTrackingScreen';
-import { OrdersScreen } from '../screens/OrdersScreen';
 import { AddAddressScreen } from '../screens/AddAddressScreen';
 import { OtpScreen } from '../screens/OtpScreen';
 import { PaymentProcessingScreen } from '../screens/PaymentProcessingScreen';
@@ -57,17 +58,18 @@ export function RootNavigator(): React.JSX.Element {
           </>
         ) : (
           <>
+            <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="Menu" component={MenuScreen} />
             <Stack.Screen name="Cart" component={CartScreen} options={{ animation: reduceMotion ? 'none' : 'slide_from_bottom' }} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="AddAddress" component={AddAddressScreen} options={{ animation: reduceMotion ? 'none' : 'slide_from_bottom' }} />
+            <Stack.Screen name="Favorites" component={FavoritesScreen} />
             <Stack.Screen
               name="PaymentProcessing"
               component={PaymentProcessingScreen}
               options={{ animation: reduceMotion ? 'none' : 'fade', gestureEnabled: false }}
             />
             <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
-            <Stack.Screen name="Orders" component={OrdersScreen} />
           </>
         )}
       </Stack.Navigator>

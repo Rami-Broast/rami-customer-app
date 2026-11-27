@@ -14,6 +14,7 @@
  */
 
 import React from 'react';
+import { Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 export interface IconProps {
@@ -214,5 +215,93 @@ export function BikeIcon({ size, color = DEFAULT_COLOR, strokeWidth = DEFAULT_ST
       <Circle cx={18} cy={17} r={3} {...strokeProps(color, strokeWidth)} />
       <Path d="M6 17l4-7h5l2 7M10 10l-1-3H7m8 3h3" {...strokeProps(color, strokeWidth)} />
     </Frame>
+  );
+}
+
+export function HomeIcon({ size, color = DEFAULT_COLOR, strokeWidth = DEFAULT_STROKE }: IconProps): React.JSX.Element {
+  return (
+    <Frame size={size}>
+      <Path d="M3 10.5 12 3l9 7.5" {...strokeProps(color, strokeWidth)} />
+      <Path d="M5 9.5V20h14V9.5" {...strokeProps(color, strokeWidth)} />
+      <Path d="M9.5 20v-5h5v5" {...strokeProps(color, strokeWidth)} />
+    </Frame>
+  );
+}
+
+export function SearchIcon({ size, color = DEFAULT_COLOR, strokeWidth = DEFAULT_STROKE }: IconProps): React.JSX.Element {
+  return (
+    <Frame size={size}>
+      <Circle cx={11} cy={11} r={7} {...strokeProps(color, strokeWidth)} />
+      <Path d="m20 20-3.5-3.5" {...strokeProps(color, strokeWidth)} />
+    </Frame>
+  );
+}
+
+export function HeartIcon({ size, color = DEFAULT_COLOR, strokeWidth = DEFAULT_STROKE, filled = false }: IconProps & { filled?: boolean }): React.JSX.Element {
+  return (
+    <Frame size={size}>
+      <Path
+        d="M12 20s-7-4.35-9.2-8.3C1.3 9 2.4 5.8 5.4 5.1 7.3 4.65 9 5.6 12 8c3-2.4 4.7-3.35 6.6-2.9 3 .7 4.1 3.9 2.6 6.6C19 15.65 12 20 12 20z"
+        fill={filled ? color : 'none'}
+        {...strokeProps(color, strokeWidth)}
+      />
+    </Frame>
+  );
+}
+
+export function BellIcon({ size, color = DEFAULT_COLOR, strokeWidth = DEFAULT_STROKE }: IconProps): React.JSX.Element {
+  return (
+    <Frame size={size}>
+      <Path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6z" {...strokeProps(color, strokeWidth)} />
+      <Path d="M10 19a2 2 0 0 0 4 0" {...strokeProps(color, strokeWidth)} />
+    </Frame>
+  );
+}
+
+/** A stand-in "mada" badge (approximation — not the trademarked logo). */
+export function MadaMark({ size = 40 }: { size?: number }): React.JSX.Element {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size * 0.66,
+        borderRadius: 5,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#DED7D0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+      }}
+    >
+      <Text style={{ fontSize: size * 0.28, fontWeight: '900', color: '#00AEEF' }}>ma</Text>
+      <Text style={{ fontSize: size * 0.28, fontWeight: '900', color: '#84BD00' }}>da</Text>
+    </View>
+  );
+}
+
+/** A stand-in Apple Pay badge (approximation — cross-platform, not the trademarked mark). */
+export function ApplePayMark({ size = 52 }: { size?: number }): React.JSX.Element {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size * 0.6,
+        borderRadius: 6,
+        backgroundColor: '#000000',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        paddingHorizontal: 4,
+      }}
+    >
+      <Svg width={size * 0.22} height={size * 0.28} viewBox="0 0 16 20" fill="none">
+        <Path
+          d="M13.5 15.2c-.3.7-.5 1-.9 1.6-.6.9-1.4 2-2.4 2-.9 0-1.1-.6-2.3-.6s-1.5.6-2.3.6c-1 0-1.8-1-2.4-1.9C-.6 14.1-.8 10.1 1 7.9c.8-1.1 2-1.7 3.1-1.7 1 0 1.7.6 2.6.6.8 0 1.3-.6 2.5-.6 1 0 2 .5 2.8 1.4-2.5 1.3-2.1 4.8.5 5.6zM9.3 4.3C9.8 3.7 10.1 2.9 10 2c-.8 0-1.7.5-2.2 1.1-.5.5-.9 1.3-.8 2.1.9.1 1.8-.4 2.3-1z"
+          fill="#FFFFFF"
+        />
+      </Svg>
+      <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: size * 0.26, marginLeft: 2 }}>Pay</Text>
+    </View>
   );
 }
