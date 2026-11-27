@@ -10,18 +10,28 @@ import { useCart } from '../cart/CartProvider';
 import { toOrderItems } from '../cart/cart';
 import { Card, PrimaryButton, Screen } from '../components/ui';
 import { useAsync } from '../hooks/useAsync';
-import { BottomSheet, ErrorState, PressableScale, Skeleton, Toast } from '../motion';
+import { ErrorState, PressableScale, Skeleton, Toast } from '../motion';
 import { ORDER_TYPE, OrderType, PAYMENT_METHOD, PaymentMethod } from '../types/backend';
 import { RootStackParamList } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { useTheme } from '../theme/theme';
 
-const METHOD_LABELS: Record<string, string> = {
-  [PAYMENT_METHOD.CARD]: 'Card',
-  [PAYMENT_METHOD.MADA]: 'mada',
-  [PAYMENT_METHOD.APPLE_PAY]: 'Apple Pay',
-  [PAYMENT_METHOD.CASH_ON_DELIVERY]: 'Cash on delivery',
+type MethodMeta = { label: string; icon: string; subtitle: string };
+
+const METHOD_META: Record<string, MethodMeta> = {
+  [PAYMENT_METHOD.CARD]: { label: 'Card', icon: '💳', subtitle: 'Visa · Mastercard' },
+  [PAYMENT_METHOD.MADA]: { label: 'mada', icon: '🏧', subtitle: 'Saudi debit' },
+  [PAYMENT_METHOD.APPLE_PAY]: { label: 'Apple Pay', icon: '🍎', subtitle: 'Touch / Face ID' },
+  [PAYMENT_METHOD.CASH_ON_DELIVERY]: { label: 'Cash on delivery', icon: '💵', subtitle: 'Pay on arrival' },
 };
+
+/** The methods offered, in display order. Card first — the common online choice. */
+const METHOD_ORDER: PaymentMethod[] = [
+  PAYMENT_METHOD.CARD,
+  PAYMENT_METHOD.APPLE_PAY,
+  PAYMENT_METHOD.MADA,
+  PAYMENT_METHOD.CASH_ON_DELIVERY,
+];
 
 /** Choose pickup or delivery, review the server quote, pick payment, place order. */
 export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'Checkout'>): React.JSX.Element {
@@ -34,7 +44,6 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
   const [type, setType] = useState<OrderType>(route.params.type);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [method, setMethod] = useState<PaymentMethod>(PAYMENT_METHOD.CARD);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
 
@@ -90,6 +99,53 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
       <Text style={{ color: theme.colors.text, fontWeight: bold ? '800' : '600' }}>{value}</Text>
     </View>
   );
+
+  const methodTile = (m: PaymentMethod) => {
+    const active = method === m;
+    const meta = METHOD_META[m];
+    if (!meta) {
+      return null;
+    }
+    return (
+      <PressableScale
+        key={m}
+        accessibilityRole="button"
+        accessibilityLabel={meta.label}
+        accessibilityState={{ selected: active }}
+        onPress={() => setMethod(m)}
+        style={{
+          flexBasis: '48%',
+          flexGrow: 1,
+          borderRadius: theme.radius.md,
+          borderWidth: 2,
+          borderColor: active ? theme.colors.primary : theme.colors.border,
+          backgroundColor: active ? theme.colors.surfaceAlt : theme.colors.surface,
+          padding: 14,
+          gap: 6,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ fontSize: 24 }}>{meta.icon}</Text>
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              borderWidth: 2,
+              borderColor: active ? theme.colors.primary : theme.colors.border,
+              backgroundColor: active ? theme.colors.primary : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {active ? <Text style={{ color: theme.colors.onPrimary, fontSize: 13, fontWeight: '900' }}>✓</Text> : null}
+          </View>
+        </View>
+        <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 15 }}>{meta.label}</Text>
+        <Text style={{ color: theme.colors.textMuted, fontSize: 12 }}>{meta.subtitle}</Text>
+      </PressableScale>
+    );
+  };
 
   const typeTab = (t: OrderType, label: string) => {
     const active = type === t;
@@ -192,11 +248,9 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
         </Card>
 
         <Card>
-          <Text style={{ color: theme.colors.textMuted, fontSize: 13, fontWeight: '600', marginBottom: 8 }}>Payment method</Text>
-          <PressableScale accessibilityRole="button" onPress={() => setSheetOpen(true)} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{METHOD_LABELS[method]}</Text>
-            <Text style={{ color: theme.colors.accent, fontWeight: '600' }}>Change</Text>
-          </PressableScale>
+          <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 16, marginBottom: 4 }}>Payment method</Text>
+          <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginBottom: 12 }}>Tap to choose how you’ll pay.</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>{METHOD_ORDER.map(methodTile)}</View>
         </Card>
 
         <Text style={{ color: theme.colors.textMuted, fontSize: 12, textAlign: 'center', paddingHorizontal: 12 }}>
@@ -212,24 +266,6 @@ export function CheckoutScreen({ route, navigation }: NativeStackScreenProps<Roo
           disabled={!quote || !!error}
         />
       </View>
-
-      <BottomSheet visible={sheetOpen} onClose={() => setSheetOpen(false)}>
-        <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '700', marginBottom: 8 }}>Payment method</Text>
-        {[PAYMENT_METHOD.CARD, PAYMENT_METHOD.MADA, PAYMENT_METHOD.APPLE_PAY, PAYMENT_METHOD.CASH_ON_DELIVERY].map((m) => (
-          <PressableScale
-            key={m}
-            accessibilityRole="button"
-            onPress={() => {
-              setMethod(m);
-              setSheetOpen(false);
-            }}
-            style={{ paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border, flexDirection: 'row', justifyContent: 'space-between' }}
-          >
-            <Text style={{ color: theme.colors.text, fontSize: 16 }}>{METHOD_LABELS[m]}</Text>
-            {method === m ? <Text style={{ color: theme.colors.primary, fontWeight: '800' }}>✓</Text> : null}
-          </PressableScale>
-        ))}
-      </BottomSheet>
     </Screen>
   );
 }
