@@ -1,4 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 
@@ -25,6 +26,9 @@ export function OtpScreen({ route, navigation }: NativeStackScreenProps<RootStac
     setError(null);
     try {
       const tokens = await api.verifyOtp(phone, code);
+      // Remember the phone so the Account screen can show it (there is no
+      // customer profile endpoint in this client). Best-effort.
+      SecureStore.setItemAsync('customer_phone', phone).catch(() => {});
       await signIn(tokens);
       // On sign-in the root switches to the main stack automatically.
     } catch (e) {

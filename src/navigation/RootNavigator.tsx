@@ -5,12 +5,13 @@ import React from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useReducedMotion } from '../motion';
 import { RootStackParamList } from './types';
-import { BranchesScreen } from '../screens/BranchesScreen';
+import { MainTabs } from './MainTabs';
+import { BranchPickerScreen } from '../screens/BranchPickerScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { MenuScreen } from '../screens/MenuScreen';
 import { OrderTrackingScreen } from '../screens/OrderTrackingScreen';
-import { OrdersScreen } from '../screens/OrdersScreen';
 import { AddAddressScreen } from '../screens/AddAddressScreen';
 import { OtpScreen } from '../screens/OtpScreen';
 import { PaymentProcessingScreen } from '../screens/PaymentProcessingScreen';
@@ -28,9 +29,10 @@ function navTheme(background: string, card: string, text: string, primary: strin
 /**
  * The app's navigation.
  *
- * Two screen sets, switched by auth state: the OTP flow when signed out, the
- * full ordering flow when signed in. Screen transitions collapse to none under
- * reduced motion, per the motion system.
+ * Two screen sets, switched by auth state: the OTP flow when signed out, and
+ * the main app when signed in — bottom tabs (Home/Search/Orders/Offers/Account)
+ * with the ordering screens (menu, cart, checkout, tracking) pushed on top.
+ * Transitions collapse to none under reduced motion, per the motion system.
  */
 export function RootNavigator(): React.JSX.Element {
   const theme = useTheme();
@@ -58,18 +60,19 @@ export function RootNavigator(): React.JSX.Element {
           </>
         ) : (
           <>
-            <Stack.Screen name="Branches" component={BranchesScreen} />
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="BranchPicker" component={BranchPickerScreen} options={{ animation: reduceMotion ? 'none' : 'slide_from_bottom' }} />
             <Stack.Screen name="Menu" component={MenuScreen} />
             <Stack.Screen name="Cart" component={CartScreen} options={{ animation: reduceMotion ? 'none' : 'slide_from_bottom' }} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="AddAddress" component={AddAddressScreen} options={{ animation: reduceMotion ? 'none' : 'slide_from_bottom' }} />
+            <Stack.Screen name="Favorites" component={FavoritesScreen} />
             <Stack.Screen
               name="PaymentProcessing"
               component={PaymentProcessingScreen}
               options={{ animation: reduceMotion ? 'none' : 'fade', gestureEnabled: false }}
             />
             <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
-            <Stack.Screen name="Orders" component={OrdersScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -21,6 +21,8 @@ export interface CartLine {
   quantity: number;
   addonIds: string[];
   addonNames: string[];
+  /** Display image path from the menu, for the cart. Optional; null when none. */
+  imageUrl?: string | null;
 }
 
 export interface Cart {

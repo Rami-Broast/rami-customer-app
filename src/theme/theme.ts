@@ -21,6 +21,11 @@ export interface Theme {
     /** Brand primary — the Rami Broast maroon from the logo. */
     primary: string;
     onPrimary: string;
+    /** Brand gold — the golden "R" of the Rami Broast logo. Used for accents/effects. */
+    gold: string;
+    /** A soft gold tint for chip/surface backgrounds. */
+    goldSoft: string;
+    onGold: string;
     /** Brand secondary — the warm orange of the shawarma / citrus. */
     secondary: string;
     /** Brand accent — the blue of the "for fast food" tagline. */
@@ -42,6 +47,7 @@ export interface Theme {
 // Sampled from the logo.
 const MAROON = '#752E2A'; // Rami Broast brand maroon, from the logo
 const MAGENTA = MAROON;
+const GOLD = '#E3B341'; // Rami Broast brand gold, the golden "R" in the logo
 const ORANGE = '#F47C20';
 const BLUE = '#2E63A6';
 
@@ -54,6 +60,9 @@ const light: Theme['colors'] = {
   textMuted: '#6E6167',
   primary: MAGENTA,
   onPrimary: '#FFFFFF',
+  gold: GOLD,
+  goldSoft: '#FBF0D6',
+  onGold: '#4A2A10',
   secondary: ORANGE,
   accent: BLUE,
   success: '#2E9E5B',
@@ -75,6 +84,9 @@ const dark: Theme['colors'] = {
   textMuted: '#A79CA6',
   primary: '#B5564F',
   onPrimary: '#FFFFFF',
+  gold: '#E3B341',
+  goldSoft: '#3A3220',
+  onGold: '#1E1A1C',
   secondary: '#F78F3D',
   accent: '#5C8BD6',
   success: '#3CC06E',

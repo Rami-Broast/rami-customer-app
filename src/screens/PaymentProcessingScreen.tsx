@@ -87,7 +87,7 @@ export function PaymentProcessingScreen({
         <View style={{ marginTop: 24, gap: 10 }}>
           <PrimaryButton label="Track my order" onPress={() => navigation.replace('OrderTracking', { orderId })} />
           {visual === 'failed' || visual === 'cancelled' ? (
-            <PrimaryButton label="Back to orders" onPress={() => navigation.replace('Orders')} />
+            <PrimaryButton label="Back to orders" onPress={() => navigation.navigate('Main', { screen: 'Orders' })} />
           ) : null}
         </View>
       </View>

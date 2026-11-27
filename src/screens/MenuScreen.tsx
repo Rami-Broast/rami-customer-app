@@ -4,6 +4,7 @@ import { ScrollView, Text, View } from 'react-native';
 
 import { useAuth } from '../auth/AuthProvider';
 import { useCart } from '../cart/CartProvider';
+import { FoodImage } from '../components/FoodImage';
 import { Card, Screen } from '../components/ui';
 import { useAsync } from '../hooks/useAsync';
 import { CartBadge, EmptyState, ErrorState, PressableScale, Skeleton } from '../motion';
@@ -30,6 +31,7 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
         unitPriceMinor: product.priceMinor,
         addonIds: [],
         addonNames: [],
+        imageUrl: product.imageUrl,
       },
     });
   };
@@ -68,6 +70,7 @@ export function MenuScreen({ route, navigation }: NativeStackScreenProps<RootSta
                 {category.products.map((product) => (
                   <Card key={product.id}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <FoodImage uri={product.imageUrl} name={product.name} radius={theme.radius.md} style={{ width: 68, height: 68, marginRight: 12 }} />
                       <View style={{ flex: 1, paddingRight: 12 }}>
                         <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>{product.name}</Text>
                         {product.description ? (

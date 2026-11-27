@@ -1,4 +1,3 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
@@ -7,7 +6,7 @@ import { Card, Screen } from '../components/ui';
 import { STATUS_META } from '../features/order/order-status.model';
 import { useAsync } from '../hooks/useAsync';
 import { EmptyState, ErrorState, PressableScale, Skeleton } from '../motion';
-import { RootStackParamList } from '../navigation/types';
+import { TabScreenProps } from '../navigation/types';
 import { formatSar } from '../util/money';
 import { StatusTone } from '../features/order/order-status.model';
 import { useTheme } from '../theme/theme';
@@ -24,15 +23,15 @@ function toneColor(theme: ReturnType<typeof useTheme>, tone: StatusTone): string
           : theme.colors.textMuted;
 }
 
-/** My past and current orders. */
-export function OrdersScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Orders'>): React.JSX.Element {
+/** My past and current orders (a bottom tab). */
+export function OrdersScreen({ navigation }: TabScreenProps<'Orders'>): React.JSX.Element {
   const theme = useTheme();
   const { api } = useAuth();
   const { data, loading, error, reload } = useAsync(() => api.myOrders(), []);
   const orders = data?.data ?? [];
 
   return (
-    <Screen title="My orders" onBack={() => navigation.goBack()}>
+    <Screen title="My orders">
       {loading ? (
         <View style={{ padding: 20, gap: 12 }}>
           {[0, 1, 2].map((i) => (
@@ -51,7 +50,7 @@ export function OrdersScreen({ navigation }: NativeStackScreenProps<RootStackPar
               <PressableScale key={order.id} accessibilityRole="button" onPress={() => navigation.navigate('OrderTracking', { orderId: order.id })}>
                 <Card>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{order.orderNumber}</Text>
+                    <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 16 }}>{order.orderNumber}</Text>
                     <View style={{ backgroundColor: toneColor(theme, meta.tone), borderRadius: theme.radius.pill, paddingVertical: 3, paddingHorizontal: 10 }}>
                       <Text style={{ color: theme.colors.onPrimary, fontSize: 12, fontWeight: '700' }}>{meta.label}</Text>
                     </View>
